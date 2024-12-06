@@ -12,3 +12,35 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id          Int       @id @default(autoincrement())
+  email       String    @unique
+  password    String
+  nickname    String
+  profileImage String?
+  playlists   Playlist[]
+  likes       UserPlaylistLikes[]
+}
+
+model Playlist {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id])
+  likes       UserPlaylistLikes[]
+}
+
+model UserPlaylistLikes {
+  userId      Int
+  playlistId  Int
+
+  user        User     @relation(fields: [userId], references: [id])
+  playlist    Playlist @relation(fields: [playlistId], references: [id])
+
+  @@id([userId, playlistId])
+  @@map("user_playlist_likes") // 중간 테이블 이름을 명시적으로 정의
+}
