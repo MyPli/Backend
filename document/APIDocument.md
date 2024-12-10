@@ -596,4 +596,4 @@
       - **Error Codes**:
           - `400 Bad Request`: 검색어 누락
           - `404 Not Found`: 검색 결과 없음
-- --
+  ---
