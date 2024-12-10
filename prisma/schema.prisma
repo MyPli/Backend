@@ -1,46 +1,94 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id          Int       @id @default(autoincrement())
-  email       String    @unique
-  password    String
-  nickname    String
-  profileImage String?
-  playlists   Playlist[]
-  likes       UserPlaylistLikes[]
+  id             Int        @id @default(autoincrement())
+  email          String     @unique
+  password       String?
+  nickname       String     @unique
+  profileImage   String?
+  authProvider   String     @default("email")
+  authProviderId String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  likes          Like[]
+  playlists      Playlist[]
+  sessions       Session[]
 }
 
 model Playlist {
-  id          Int       @id @default(autoincrement())
+  id          Int           @id @default(autoincrement())
+  userId      Int
   title       String
   description String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  userId      Int
-  user        User      @relation(fields: [userId], references: [id])
-  likes       UserPlaylistLikes[]
+  coverImage  String?
+  likesCount  Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  likes       Like[]
+  user        User          @relation(fields: [userId], references: [id])
+  tags        PlaylistTag[]
+  videos      Video[]
+
+  @@index([userId])
 }
 
-model UserPlaylistLikes {
-  userId      Int
-  playlistId  Int
+model Video {
+  id           Int      @id @default(autoincrement())
+  playlistId   Int
+  youtubeId    String
+  title        String
+  channelName  String
+  thumbnailUrl String
+  duration     Int
+  order        Int      @default(0)
+  createdAt    DateTime @default(now())
+  playlist     Playlist @relation(fields: [playlistId], references: [id])
 
-  user        User     @relation(fields: [userId], references: [id])
-  playlist    Playlist @relation(fields: [playlistId], references: [id])
+  @@index([playlistId, order])
+}
 
-  @@id([userId, playlistId])
-  @@map("user_playlist_likes") // 중간 테이블 이름을 명시적으로 정의
+model Tag {
+  id        Int           @id @default(autoincrement())
+  name      String        @unique
+  playlists PlaylistTag[]
+}
+
+model PlaylistTag {
+  playlistId Int
+  tagId      Int
+  playlist   Playlist @relation(fields: [playlistId], references: [id])
+  tag        Tag      @relation(fields: [tagId], references: [id])
+
+  @@id([playlistId, tagId])
+  @@index([tagId])
+}
+
+model Like {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  playlistId Int
+  createdAt  DateTime @default(now())
+  playlist   Playlist @relation(fields: [playlistId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, playlistId])
+  @@index([playlistId], map: "Like_playlistId_fkey")
+}
+
+model Session {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  accessToken  String
+  refreshToken String
+  expiresAt    DateTime
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "Session_userId_fkey")
 }
