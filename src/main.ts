@@ -5,7 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
+  app.enableCors();
   // ValidationPipe 전역 설정 추가
   app.useGlobalPipes(
     new ValidationPipe({
