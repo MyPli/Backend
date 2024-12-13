@@ -25,7 +25,7 @@ export class UserService {
     });
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('해당 유저를 찾을 수 없습니다');
     }
 
     return user; // 필요한 정보만 반환

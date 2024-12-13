@@ -13,10 +13,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any): Promise<any> {
-    console.log('JWT Payload:', payload); // 토큰의 페이로드 확인
-
     if (!payload || !payload.sub) {
-      throw new UnauthorizedException('Invalid JWT payload');
+      throw new UnauthorizedException('유효하지 않은 JWT Payload 입니다');
     }
     const user = {
       userId: payload.sub,
@@ -24,7 +22,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     };
 
     if (!user.userId) {
-      throw new UnauthorizedException('User ID is undefined');
+      throw new UnauthorizedException('UserId가 없습니다');
     }
 
     return user;

@@ -10,12 +10,12 @@ export class JwtAuthGuard implements CanActivate {
     const authHeader = request.headers.authorization;
 
     if (!authHeader) {
-      throw new UnauthorizedException('Authorization header is missing');
+      throw new UnauthorizedException('인증 토큰을 포함해주세요');
     }
 
     const token = authHeader.split(' ')[1];
     if (!token) {
-      throw new UnauthorizedException('JWT token is missing');
+      throw new UnauthorizedException('JWT token이 없습니다');
     }
 
     try {
@@ -23,8 +23,7 @@ export class JwtAuthGuard implements CanActivate {
       request.user = { userId: payload.sub, email: payload.email }; // userId로 통일
       return true;
     } catch (error) {
-      throw new UnauthorizedException('Invalid or expired JWT token');
+      throw new UnauthorizedException('유효하지 않거나 만료된 토큰입니다');
     }
   }
-
 }

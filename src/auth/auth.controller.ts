@@ -29,7 +29,7 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   async googleAuthRedirect(@Req() req) {
     return {
-      message: 'Google login successful',
+      message: '구글 소셜로그인에 성공했습니다',
       user: req.user, // GoogleStrategy에서 전달된 사용자 정보
     };
   }
