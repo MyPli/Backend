@@ -12,31 +12,25 @@ export class S3Service {
 
   private bucketName = process.env.AWS_S3_BUCKET_NAME;
 
-  async uploadImage(userId: number, base64Image: string): Promise<string> {
+  async uploadImage(
+    userId: number,
+    fileBuffer: Buffer,
+    fileType: string,
+  ): Promise<string> {
     try {
-      // Base64 이미지 데이터를 Buffer로 변환
-      const buffer = Buffer.from(
-        base64Image.replace(/^data:image\/\w+;base64,/, ''),
-        'base64',
-      );
-
-      // 파일 이름 생성 (UUID 또는 고유 이름)
-      const fileName = `users/${userId}/profile_${crypto.randomUUID()}.jpeg`;
-
-      // S3에 업로드
+      const fileName = `mypli_users/profile_${crypto.randomUUID()}.${fileType}`;
       const uploadResult = await this.s3
         .upload({
           Bucket: this.bucketName,
           Key: fileName,
-          Body: buffer,
-          ContentType: 'image/jpeg',
-          ACL: 'public-read', // 이미지가 공개 URL로 접근 가능하도록 설정
+          Body: fileBuffer,
+          ContentType: `image/${fileType}`,
         })
         .promise();
 
-      // 업로드된 파일의 URL 반환
       return uploadResult.Location;
     } catch (error) {
+      console.error('S3 Upload Error:', error); // 에러 로깅
       throw new InternalServerErrorException('S3 업로드 중 오류 발생');
     }
   }
