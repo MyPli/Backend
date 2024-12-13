@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -54,11 +58,20 @@ export class AuthService {
       { expiresIn: '7d' },
     );
 
+    // Session 테이블에 Access Token, Refresh Token 저장
+    await this.prisma.session.create({
+      data: {
+        userId: user.id,
+        accessToken,
+        refreshToken,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7일 후 만료
+      },
+    });
+
     return { accessToken, refreshToken };
   }
 
   // Google 소셜 로그인
-  // auth.service.ts
   async googleLogin(payload: {
     email: string;
     firstName: string;
@@ -95,13 +108,31 @@ export class AuthService {
       { expiresIn: '7d' },
     );
 
+    // 세션 저장 또는 업데이트
+    await this.prisma.session.upsert({
+      where: { userId: user.id },
+      create: {
+        userId: user.id,
+        accessToken,
+        refreshToken,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Refresh Token 만료 시간 설정
+      },
+      update: {
+        accessToken,
+        refreshToken,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Refresh Token 만료 시간 갱신
+      },
+    });
+
     return { accessToken, refreshToken };
   }
 
   async logout(userId: number) {
-    // Refresh Token을 삭제하거나 무효화
+    // Session 테이블에서 userId에 해당하는 모든 세션 삭제
     await this.prisma.session.deleteMany({
       where: { userId },
     });
+
+    return { message: '로그아웃 성공' };
   }
 }
