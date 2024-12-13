@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { PlaylistModule } from './playlist/playlist.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { Module } from '@nestjs/common';
 
 @Module({
   imports: [LikeModule, PlaylistModule, PrismaModule, AuthModule, UserModule],

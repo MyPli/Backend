@@ -1,5 +1,4 @@
 export class ToggleLikeDto {
-    userId: number; 
-    playlistId: number; 
-  }
-  
+  userId: number;
+  playlistId: number;
+}

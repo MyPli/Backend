@@ -41,7 +41,10 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Patch('me/profile-image')
   @UseInterceptors(FileInterceptor('file'))
-  async updateProfileImage(@Req() req, @UploadedFile() file: Express.Multer.File) {
+  async updateProfileImage(
+    @Req() req,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
     const userId = req.user.userId;
     if (!file) {
       throw new BadRequestException('파일이 업로드되지 않았습니다.');
