@@ -12,7 +12,9 @@ export class LikeService {
       where: { id: playlistId },
     });
     if (!playlist) {
-      throw new NotFoundException(`플레이리스트 ID ${playlistId}를 찾을 수 없습니다.`);
+      throw new NotFoundException(
+        `플레이리스트 ID ${playlistId}를 찾을 수 없습니다.`,
+      );
     }
 
     // 좋아요가 이미 있는지 확인
@@ -80,11 +82,11 @@ export class LikeService {
         },
       },
     });
-  
+
     if (likes.length === 0) {
       throw new NotFoundException('좋아요한 플레이리스트가 없습니다.');
     }
-  
+
     // 데이터 포맷 변경
     return likes.map((like) => ({
       id: like.playlist.id,
@@ -93,5 +95,4 @@ export class LikeService {
       tags: like.playlist.tags.map((playlistTag) => playlistTag.tag.name), // Tag의 name 속성을 매핑
     }));
   }
-  
 }

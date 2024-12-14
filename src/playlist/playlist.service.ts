@@ -12,64 +12,79 @@ export class PlaylistService {
   constructor(private readonly prisma: PrismaService) {
     this.youtube = google.youtube({
       version: 'v3',
-      auth: process.env.YOUTUBE_API_KEY, // 유튜브 API 키 환경변수로 설정
+      auth: process.env.YOUTUBE_API_KEY,
     });
   }
 
   // 1. 플레이리스트 생성
   async createPlaylist(dto: CreatePlaylistDto, userId: number): Promise<any> {
+    if (!userId) {
+      throw new Error('유효하지 않은 사용자입니다.');
+    }
+  
     const { title, description, tags } = dto;
-
+  
     const playlist = await this.prisma.playlist.create({
       data: {
         title,
         description,
-        user: { connect: { id: userId } },
+        user: {
+          connect: { id: userId }, // userId로 연결
+        },
       },
     });
-
+  
     if (tags && tags.length > 0) {
       await Promise.all(
         tags.map(async (tag) => {
           await this.prisma.playlistTag.create({
             data: {
-              playlist: { connect: { id: playlist.id } },
+              playlist: { connect: { id: playlist.id } }, // Playlist 관계 설정
               tag: {
                 connectOrCreate: {
-                  where: { name: tag },
-                  create: { name: tag },
+                  where: { name: tag }, // 태그 이름으로 검색
+                  create: { name: tag }, // 태그가 없으면 새로 생성
                 },
               },
             },
           });
+          
         }),
       );
     }
-
+  
     return playlist;
   }
 
   // 2. 플레이리스트 수정
-  async updatePlaylist(id: number, userId: number, dto: UpdatePlaylistDto): Promise<any> {
+  async updatePlaylist(
+    id: number,
+    userId: number,
+    dto: UpdatePlaylistDto,
+  ): Promise<any> {
     const { title, description, tags } = dto;
 
     const playlist = await this.prisma.playlist.findUnique({
       where: { id },
       include: { tags: true },
     });
-
-    if (!playlist || playlist.userId !== userId) {
+    
+    if (!playlist) {
+      throw new NotFoundException(`플레이리스트를 찾을 수 없습니다.`);
+    }
+  
+    if (playlist.userId !== userId) {
       throw new UnauthorizedException('수정 권한이 없습니다.');
     }
-
+  
     const updatedPlaylist = await this.prisma.playlist.update({
       where: { id },
       data: { title, description },
     });
-
+  
     if (tags && tags.length > 0) {
       await this.prisma.playlistTag.deleteMany({ where: { playlistId: id } });
-
+  
       await Promise.all(
         tags.map(async (tag) => {
           await this.prisma.playlistTag.create({
@@ -86,20 +101,41 @@ export class PlaylistService {
         }),
       );
     }
-
+  
     return updatedPlaylist;
   }
+  
 
   // 3. 플레이리스트 삭제
-  async deletePlaylist(id: number): Promise<string> {
-    const playlist = await this.prisma.playlist.findUnique({ where: { id } });
-    if (!playlist) {
-      throw new NotFoundException(`ID ${id}를 찾을 수 없습니다.`);
-    }
+  async deletePlaylist(id: number, userId: number): Promise<string> {
 
+    const playlist = await this.prisma.playlist.findUnique({ where: { id } });
+  
+    if (!playlist || playlist.userId !== userId) {
+      throw new UnauthorizedException('삭제 권한이 없습니다.');
+    }
+  
+
+    // 1. 동영상 삭제
+    await this.prisma.video.deleteMany({
+      where: { playlistId: id },
+    });
+  
+    // 2. 태그 연결 삭제
+    await this.prisma.playlistTag.deleteMany({
+      where: { playlistId: id },
+    });
+  
+    // 3. 좋아요 데이터 삭제
+    await this.prisma.like.deleteMany({
+      where: { playlistId: id },
+    });
+  
+    // 4. 플레이리스트 삭제
     await this.prisma.playlist.delete({ where: { id } });
     return `플레이리스트 ID ${id} 삭제 완료`;
   }
+  
 
   // 4. 동영상 추가
   async addVideo(playlistId: number, dto: AddVideoDto): Promise<any> {
