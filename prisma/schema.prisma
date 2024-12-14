@@ -19,7 +19,7 @@ model User {
   updatedAt      DateTime   @updatedAt
   likes          Like[]
   playlists      Playlist[]
-  sessions       Session[]
+  sessions       Session?
 }
 
 model Playlist {
@@ -84,11 +84,9 @@ model Like {
 
 model Session {
   id           Int      @id @default(autoincrement())
-  userId       Int
+  userId       Int      @unique
   accessToken  String
   refreshToken String
   expiresAt    DateTime
   user         User     @relation(fields: [userId], references: [id])
-
-  @@index([userId], map: "Session_userId_fkey")
 }

@@ -2,14 +2,15 @@ import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 
 @Injectable()
-export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
-  // 모듈 초기화 시 Prisma 클라이언트 연결
+export class PrismaService
+  extends PrismaClient
+  implements OnModuleInit, OnModuleDestroy
+{
   async onModuleInit() {
     await this.$connect();
     console.log('Prisma connected to the database');
   }
 
-  // 모듈 종료 시 Prisma 클라이언트 연결 해제
   async onModuleDestroy() {
     await this.$disconnect();
     console.log('Prisma disconnected from the database');
