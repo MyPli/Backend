@@ -1,12 +1,12 @@
-import { IsString, IsOptional, IsNumber } from 'class-validator';
+import { IsString, IsOptional, IsInt } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class SearchVideoDto {
   @IsString()
-  keyword: string;
+  keyword: string; // 필수 검색 키워드
 
   @IsOptional()
-  @IsNumber()
-  @Type(() => Number) // 문자열을 숫자로 변환
-  maxResults?: number = 5; // 기본값 설정
+  @Type(() => Number)
+  @IsInt({ message: 'maxResults는 정수여야 합니다.' })
+  maxResults: number = 5; // 기본값 설정
 }
