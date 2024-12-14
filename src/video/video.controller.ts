@@ -47,7 +47,7 @@ export class VideoController {
     return this.videoService.updateOrder(playlistId, dto, userId);
   }
 
-  // 유튜브 동영상 검색 (인증 필요 없음)
+  // 유튜브 동영상 검색
   @Get('search')
   @ApiQuery({ name: 'keyword', required: true, description: '검색 키워드' })
   @ApiQuery({ name: 'maxResults', required: false, description: '검색 결과 수 (기본값: 5)', type: Number })
