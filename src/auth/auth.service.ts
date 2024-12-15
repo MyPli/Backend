@@ -44,13 +44,13 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
     const user = await this.prisma.user.findUnique({ where: { email } });
-
+  
     if (!user || !(await bcrypt.compare(password, user.password))) {
       throw new UnauthorizedException(
         '이메일 또는 비밀번호가 올바르지 않습니다.',
       );
     }
-
+  
     const accessToken = this.jwtService.sign({
       sub: user.id,
       email: user.email,
@@ -59,17 +59,23 @@ export class AuthService {
       { sub: user.id },
       { expiresIn: '7d' },
     );
-
-    // Session 테이블에 Access Token, Refresh Token 저장
-    await this.prisma.session.create({
-      data: {
+  
+    // 세션 테이블에서 해당 userId의 세션을 업데이트하거나 새로 생성
+    await this.prisma.session.upsert({
+      where: { userId: user.id },
+      create: {
         userId: user.id,
         accessToken,
         refreshToken,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7일 후 만료
       },
+      update: {
+        accessToken,
+        refreshToken,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7일 후 만료 갱신
+      },
     });
-
+  
     return { accessToken, refreshToken };
   }
 

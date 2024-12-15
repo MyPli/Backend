@@ -19,13 +19,16 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     const token = authHeader.split(' ')[1];
+
     if (!token) {
       throw new UnauthorizedException('JWT token이 없습니다');
     }
 
     try {
       const payload = this.jwtService.verify(token);
-      request.user = { userId: payload.sub, email: payload.email }; // userId로 통일
+
+      // 사용자 정보를 요청 객체에 설정
+      request.user = { userId: payload.sub, email: payload.email };
       return true;
     } catch (error) {
       throw new UnauthorizedException('유효하지 않거나 만료된 토큰입니다');
