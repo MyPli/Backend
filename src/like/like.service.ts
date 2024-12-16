@@ -66,33 +66,4 @@ export class LikeService {
     return `플레이리스트 ID ${playlistId}의 좋아요를 해제했습니다.`;
   }
 
-  // 좋아요한 플레이리스트 리스트 가져오기
-  async getLikedPlaylists(userId: number): Promise<any[]> {
-    const likes = await this.prisma.like.findMany({
-      where: { userId },
-      include: {
-        playlist: {
-          include: {
-            tags: {
-              include: {
-                tag: true, // Tag 데이터를 포함하여 가져오기
-              },
-            },
-          },
-        },
-      },
-    });
-
-    if (likes.length === 0) {
-      throw new NotFoundException('좋아요한 플레이리스트가 없습니다.');
-    }
-
-    // 데이터 포맷 변경
-    return likes.map((like) => ({
-      id: like.playlist.id,
-      title: like.playlist.title,
-      description: like.playlist.description,
-      tags: like.playlist.tags.map((playlistTag) => playlistTag.tag.name), // Tag의 name 속성을 매핑
-    }));
-  }
 }
