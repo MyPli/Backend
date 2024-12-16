@@ -22,7 +22,9 @@ export class LikeService {
       where: { userId, playlistId },
     });
     if (existingLike) {
-      return '이미 좋아요를 눌렀습니다.';
+      return {
+        message: '이미 좋아요를 누른 상태입니다',
+      };
     }
 
     // 좋아요 추가
@@ -39,7 +41,10 @@ export class LikeService {
       data: { likesCount: { increment: 1 } },
     });
 
-    return `플레이리스트 ID ${playlistId}에 좋아요를 추가했습니다.`;
+    return {
+      message: '좋아요 등록에 성공했습니다',
+      playlistId : playlistId
+    };
   }
 
   // 좋아요 해제
@@ -63,7 +68,10 @@ export class LikeService {
       data: { likesCount: { decrement: 1 } },
     });
 
-    return `플레이리스트 ID ${playlistId}의 좋아요를 해제했습니다.`;
+    return {
+      message: '좋아요 해제에 성공했습니다',
+      playlistId : playlistId
+    };
   }
 
 }
