@@ -13,7 +13,7 @@ import {
 import { UserService } from './user.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
-@Controller('users')
+@Controller('api/users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
@@ -66,5 +66,13 @@ export class UserController {
   async deleteUser(@Req() req) {
     const userId = req.user.userId;
     return this.userService.deleteUser(userId);
+  }
+
+  // 좋아요 리스트 조회
+  @UseGuards(JwtAuthGuard)
+  @Get('me/likes')
+  async getLikedPlaylists(@Req() req: any): Promise<any[]> {
+    const userId = req.user.userId; // 인증된 사용자 ID 가져오기
+    return this.userService.getLikedPlaylists(userId);
   }
 }
