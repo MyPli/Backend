@@ -20,7 +20,7 @@ import { AddVideoDto } from './dto/add-video.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Request } from 'express';
 
-@Controller('playlists')
+@Controller('api/playlists')
 @UsePipes(new ValidationPipe({ transform: true }))
 @UseGuards(JwtAuthGuard) // JWT 인증 적용
 export class PlaylistController {
