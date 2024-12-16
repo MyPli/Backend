@@ -6,7 +6,7 @@ export class LikeService {
   constructor(private readonly prisma: PrismaService) {}
 
   // 좋아요 추가
-  async addLike(userId: number, playlistId: number): Promise<string> {
+  async addLike(userId: number, playlistId: number):  Promise<{ message: string; playlistId?: number }> {
     // 플레이리스트 존재 여부 확인
     const playlist = await this.prisma.playlist.findUnique({
       where: { id: playlistId },
@@ -23,7 +23,7 @@ export class LikeService {
     });
     if (existingLike) {
       return {
-        message: '이미 좋아요를 누른 상태입니다',
+        message : '이미 좋아요를 누른 상태입니다',
       };
     }
 
@@ -48,13 +48,15 @@ export class LikeService {
   }
 
   // 좋아요 해제
-  async removeLike(userId: number, playlistId: number): Promise<string> {
+  async removeLike(userId: number, playlistId: number): Promise<{ message: string; playlistId?: number }> {
     // 좋아요 존재 여부 확인
     const existingLike = await this.prisma.like.findFirst({
       where: { userId, playlistId },
     });
     if (!existingLike) {
-      return '좋아요를 누르지 않은 상태입니다.';
+      return {
+        message: '좋아요를 누르지 않은 상태입니다.'
+      };
     }
 
     // 좋아요 삭제
