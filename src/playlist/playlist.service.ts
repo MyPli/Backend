@@ -240,4 +240,26 @@ export class PlaylistService {
       },
     });
   }
+
+  // 내 플레이리스트 정렬 (기본: 최신순, 옵션: 가나다순)
+  async getMyPlaylists(userId: number, sort: 'latest' | 'alphabetical' = 'latest') {
+    // 정렬 기준 설정
+    const orderBy = sort === 'alphabetical'
+      ? { title: 'asc' } // 가나다순
+      : { createdAt: 'desc' }; // 최신순
+
+    // 플레이리스트 조회
+    return this.prisma.playlist.findMany({
+      where: { userId }, // 내 플레이리스트만 가져옴
+      orderBy, // 정렬 적용
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        coverImage: true,
+        likesCount: true,
+        createdAt: true,
+      },
+    });
+  }
 }
