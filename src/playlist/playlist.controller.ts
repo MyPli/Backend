@@ -8,6 +8,7 @@ import {
   UsePipes,
   ValidationPipe,
   ParseIntPipe,
+  Query,
   Get,
   Req,
   UseGuards,
@@ -20,15 +21,16 @@ import { AddVideoDto } from './dto/add-video.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Request } from 'express';
 
-@Controller('api/playlists')
+@Controller('/playlists')
 @UsePipes(new ValidationPipe({ transform: true }))
-@UseGuards(JwtAuthGuard) // JWT 인증 적용
+
 export class PlaylistController {
   constructor(private readonly playlistService: PlaylistService) {}
 
   // 1. 플레이리스트 생성
 // 현재 컨트롤러
 @Post()
+@UseGuards(JwtAuthGuard) // JWT 인증 적용
 async createPlaylist(@Body() dto: CreatePlaylistDto, @Req() req): Promise<any> {
   const userId = req.user?.userId; // 인증 토큰에서 userId 추출
   if (!userId) {
@@ -40,6 +42,7 @@ async createPlaylist(@Body() dto: CreatePlaylistDto, @Req() req): Promise<any> {
 
   // 2. 플레이리스트 수정
   @Patch(':id')
+  @UseGuards(JwtAuthGuard) // JWT 인증 적용
   async updatePlaylist(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdatePlaylistDto,
@@ -57,6 +60,7 @@ async createPlaylist(@Body() dto: CreatePlaylistDto, @Req() req): Promise<any> {
   
   // 3. 플레이리스트 삭제
   @Delete(':id')
+  @UseGuards(JwtAuthGuard) // JWT 인증 적용
   async deletePlaylist(
     @Param('id', ParseIntPipe) id: number,
     @Req() req: Request,
@@ -69,6 +73,7 @@ async createPlaylist(@Body() dto: CreatePlaylistDto, @Req() req): Promise<any> {
 
   // 4. 동영상 추가
   @Post(':id/videos')
+  @UseGuards(JwtAuthGuard) // JWT 인증 적용
   async addVideo(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: AddVideoDto,
@@ -78,16 +83,35 @@ async createPlaylist(@Body() dto: CreatePlaylistDto, @Req() req): Promise<any> {
 
   // 5. 플레이리스트 상세 조회
   @Get(':id')
+  @UseGuards(JwtAuthGuard) // JWT 인증 적용
   async getPlaylistDetails(@Param('id', ParseIntPipe) id: number): Promise<any> {
     return this.playlistService.getPlaylistDetails(id);
   }
 
   // 6. 플레이리스트 곡 제거
   @Delete(':id/videos/:videoId')
+  @UseGuards(JwtAuthGuard) // JWT 인증 적용
   async removeVideo(
     @Param('id', ParseIntPipe) playlistId: number,
     @Param('videoId', ParseIntPipe) videoId: number,
   ): Promise<any> {
     return this.playlistService.removeVideo(playlistId, videoId);
   }
+
+  // 인기 플레이리스트 반환
+  @Get('popular')
+  async getPopularPlaylists(@Query('limit') limit?: number) {
+    const resultLimit = limit ? parseInt(limit.toString(), 10) : 5; // 기본값 5
+    const playlists = await this.playlistService.getPopularPlaylists(resultLimit);
+    return { playlists };
+  }
+
+  // 최신 플레이리스트 반환
+  @Get('latest')
+  async getLatestPlaylists(@Query('limit') limit?: number) {
+    const resultLimit = limit ? parseInt(limit.toString(), 10) : 5; // 기본값 5
+    const playlists = await this.playlistService.getLatestPlaylists(resultLimit);
+    return { playlists };
+  }
 }
+
