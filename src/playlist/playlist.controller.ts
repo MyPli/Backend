@@ -113,5 +113,17 @@ async createPlaylist(@Body() dto: CreatePlaylistDto, @Req() req): Promise<any> {
     const playlists = await this.playlistService.getLatestPlaylists(resultLimit);
     return { playlists };
   }
+
+  // 내 플레이리스트 가져오기 (정렬 기능 포함)
+  @UseGuards(JwtAuthGuard) // 인증이 필요한 경우
+  @Get('me')
+  async getMyPlaylists(
+    @Req() req, // 인증된 사용자 정보
+    @Query('sort') sort?: 'latest' | 'alphabetical', // 정렬 기준: 최신순 또는 가나다순
+  ) {
+    const userId = req.user.userId; // 로그인된 사용자 ID
+    const playlists = await this.playlistService.getMyPlaylists(userId, sort || 'latest'); // 기본값: 최신순
+    return { playlists };
+  }
 }
 
