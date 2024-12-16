@@ -52,6 +52,16 @@ let PlaylistController = class PlaylistController {
     async removeVideo(playlistId, videoId) {
         return this.playlistService.removeVideo(playlistId, videoId);
     }
+    async getPopularPlaylists(limit) {
+        const resultLimit = limit ? parseInt(limit.toString(), 10) : 5;
+        const playlists = await this.playlistService.getPopularPlaylists(resultLimit);
+        return { playlists };
+    }
+    async getLatestPlaylists(limit) {
+        const resultLimit = limit ? parseInt(limit.toString(), 10) : 5;
+        const playlists = await this.playlistService.getLatestPlaylists(resultLimit);
+        return { playlists };
+    }
 };
 exports.PlaylistController = PlaylistController;
 __decorate([
@@ -102,8 +112,22 @@ __decorate([
     __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", Promise)
 ], PlaylistController.prototype, "removeVideo", null);
+__decorate([
+    (0, common_1.Get)('popular'),
+    __param(0, (0, common_1.Query)('limit')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", Promise)
+], PlaylistController.prototype, "getPopularPlaylists", null);
+__decorate([
+    (0, common_1.Get)('latest'),
+    __param(0, (0, common_1.Query)('limit')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", Promise)
+], PlaylistController.prototype, "getLatestPlaylists", null);
 exports.PlaylistController = PlaylistController = __decorate([
-    (0, common_1.Controller)('playlists'),
+    (0, common_1.Controller)('/playlists'),
     (0, common_1.UsePipes)(new common_1.ValidationPipe({ transform: true })),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [playlist_service_1.PlaylistService])

@@ -14,6 +14,7 @@ async function bootstrap() {
         forbidNonWhitelisted: true,
         transform: true,
     }));
+    app.setGlobalPrefix('api');
     const config = new swagger_1.DocumentBuilder()
         .setTitle('MyPli API')
         .setDescription('플레이리스트 공유 서비스를 위한 REST API 문서입니다.')
@@ -21,7 +22,12 @@ async function bootstrap() {
         .addBearerAuth()
         .build();
     const document = swagger_1.SwaggerModule.createDocument(app, config);
-    swagger_1.SwaggerModule.setup('api', app, document);
+    swagger_1.SwaggerModule.setup('api-docs', app, document, {
+        swaggerOptions: {
+            url: '/api/api-docs'
+        },
+        customSiteTitle: 'API 문서',
+    });
     const port = process.env.PORT;
     await app.listen(port);
     console.log(`Application is running on: http://localhost:${port}`);

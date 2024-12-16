@@ -18,7 +18,7 @@ exports.LikeModule = LikeModule;
 exports.LikeModule = LikeModule = __decorate([
     (0, common_1.Module)({
         imports: [prisma_module_1.PrismaModule, auth_module_1.AuthModule],
-        controllers: [like_controller_1.LikeController, like_controller_1.UserLikesController],
+        controllers: [like_controller_1.LikeController],
         providers: [like_service_1.LikeService],
     })
 ], LikeModule);

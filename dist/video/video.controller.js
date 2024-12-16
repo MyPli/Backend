@@ -64,7 +64,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], VideoController.prototype, "searchVideos", null);
 exports.VideoController = VideoController = __decorate([
-    (0, common_1.Controller)('videos'),
+    (0, common_1.Controller)('/videos'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.UsePipes)(new common_1.ValidationPipe({ transform: true })),
     __metadata("design:paramtypes", [video_service_1.VideoService])

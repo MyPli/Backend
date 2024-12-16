@@ -56,6 +56,31 @@ let UserService = class UserService {
             select: { id: true, nickname: true, profileImage: true },
         });
     }
+    async getLikedPlaylists(userId) {
+        const likes = await this.prisma.like.findMany({
+            where: { userId },
+            include: {
+                playlist: {
+                    include: {
+                        tags: {
+                            include: {
+                                tag: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+        if (likes.length === 0) {
+            throw new common_1.NotFoundException('좋아요한 플레이리스트가 없습니다.');
+        }
+        return likes.map((like) => ({
+            id: like.playlist.id,
+            title: like.playlist.title,
+            description: like.playlist.description,
+            tags: like.playlist.tags.map((playlistTag) => playlistTag.tag.name),
+        }));
+    }
 };
 exports.UserService = UserService;
 exports.UserService = UserService = __decorate([

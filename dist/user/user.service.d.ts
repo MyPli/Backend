@@ -22,4 +22,5 @@ export declare class UserService {
         nickname: string;
         profileImage: string;
     }>;
+    getLikedPlaylists(userId: number): Promise<any[]>;
 }

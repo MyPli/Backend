@@ -12,4 +12,20 @@ export declare class PlaylistService {
     addVideo(playlistId: number, dto: AddVideoDto): Promise<any>;
     getPlaylistDetails(id: number): Promise<any>;
     removeVideo(playlistId: number, videoId: number): Promise<any>;
+    getPopularPlaylists(limit: number): Promise<{
+        id: number;
+        title: string;
+        description: string;
+        coverImage: string;
+        likesCount: number;
+        createdAt: Date;
+    }[]>;
+    getLatestPlaylists(limit: number): Promise<{
+        id: number;
+        title: string;
+        description: string;
+        coverImage: string;
+        likesCount: number;
+        createdAt: Date;
+    }[]>;
 }

@@ -161,6 +161,34 @@ let PlaylistService = class PlaylistService {
             message: '곡 제거 성공',
         };
     }
+    async getPopularPlaylists(limit) {
+        return this.prisma.playlist.findMany({
+            orderBy: { likesCount: 'desc' },
+            take: limit,
+            select: {
+                id: true,
+                title: true,
+                description: true,
+                coverImage: true,
+                likesCount: true,
+                createdAt: true,
+            },
+        });
+    }
+    async getLatestPlaylists(limit) {
+        return this.prisma.playlist.findMany({
+            orderBy: { createdAt: 'desc' },
+            take: limit,
+            select: {
+                id: true,
+                title: true,
+                description: true,
+                coverImage: true,
+                likesCount: true,
+                createdAt: true,
+            },
+        });
+    }
 };
 exports.PlaylistService = PlaylistService;
 exports.PlaylistService = PlaylistService = __decorate([

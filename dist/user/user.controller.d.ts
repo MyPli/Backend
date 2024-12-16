@@ -26,4 +26,5 @@ export declare class UserController {
     deleteUser(req: any): Promise<{
         message: string;
     }>;
+    getLikedPlaylists(req: any): Promise<any[]>;
 }
