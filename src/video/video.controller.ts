@@ -19,7 +19,7 @@ import { SearchVideoDto } from './dto/search-video.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiQuery } from '@nestjs/swagger';
 
-@Controller('api/videos')
+@Controller('/videos')
 @UseGuards(JwtAuthGuard) // JwtAuthGuard로 인증 적용
 @UsePipes(new ValidationPipe({ transform: true }))
 export class VideoController {
