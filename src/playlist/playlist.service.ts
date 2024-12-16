@@ -208,4 +208,36 @@ export class PlaylistService {
       message: '곡 제거 성공',
     };
   }
+
+  // 인기 플레이리스트 반환
+  async getPopularPlaylists(limit: number) {
+    return this.prisma.playlist.findMany({
+      orderBy: { likesCount: 'desc' }, // 좋아요 수 내림차순
+      take: limit, // 반환할 플레이리스트 개수
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        coverImage: true,
+        likesCount: true,
+        createdAt: true,
+      },
+    });
+  }
+
+  // 최신 플레이리스트 반환
+  async getLatestPlaylists(limit: number) {
+    return this.prisma.playlist.findMany({
+      orderBy: { createdAt: 'desc' }, // 생성일 내림차순
+      take: limit, // 반환할 플레이리스트 개수
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        coverImage: true,
+        likesCount: true,
+        createdAt: true,
+      },
+    });
+  }
 }
