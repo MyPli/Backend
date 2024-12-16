@@ -16,7 +16,7 @@ async function bootstrap() {
       transform: true, // 요청 데이터를 DTO에 정의된 타입으로 변환
     }),
   );
-
+  app.setGlobalPrefix('api');
   // Swagger 설정 추가
   const config = new DocumentBuilder()
     .setTitle('MyPli API')
@@ -26,7 +26,12 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('api-docs', app, document, {
+    swaggerOptions: {
+      url: '/api/api-docs' // Swagger 문서 경로와 맞추기 위해 설정
+    },
+    customSiteTitle: 'API 문서',
+  });
 
   // 서버 실행
   const port = process.env.PORT;
