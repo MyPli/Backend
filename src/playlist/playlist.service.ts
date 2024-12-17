@@ -4,7 +4,7 @@ import { CreatePlaylistDto } from './dto/create-playlist.dto';
 import { UpdatePlaylistDto } from './dto/update-playlist.dto';
 import { AddVideoDto } from './dto/add-video.dto';
 import { google } from 'googleapis';
-
+import { Prisma } from '@prisma/client';
 @Injectable()
 export class PlaylistService {
   private readonly youtube;
@@ -243,14 +243,15 @@ export class PlaylistService {
 
   // 내 플레이리스트 정렬 (기본: 최신순, 옵션: 가나다순)
   async getMyPlaylists(userId: number, sort: 'latest' | 'alphabetical' = 'latest') {
-    // 정렬 기준 설정
-    const orderBy = sort === 'alphabetical'
-      ? { title: 'asc' } // 가나다순
-      : { createdAt: 'desc' }; // 최신순
+    // Prisma SortOrder 사용
+    const orderBy: Prisma.PlaylistOrderByWithRelationInput =
+      sort === 'alphabetical'
+        ? { title: Prisma.SortOrder.asc } // 'asc'로 명시
+        : { createdAt: Prisma.SortOrder.desc }; // 'desc'로 명시
 
     // 플레이리스트 조회
     return this.prisma.playlist.findMany({
-      where: { userId }, // 내 플레이리스트만 가져옴
+      where: { userId },
       orderBy, // 정렬 적용
       select: {
         id: true,
