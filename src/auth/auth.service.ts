@@ -76,7 +76,16 @@ export class AuthService {
       },
     });
   
-    return { accessToken, refreshToken };
+    return {
+      message: '로그인에 성공했습니다.',
+      accessToken,
+      refreshToken,
+      user: {
+        email: user.email,
+        nickname: user.nickname,
+        profileImage: user.profileImage,
+      },
+    };
   }
 
   // Google 소셜 로그인
@@ -132,7 +141,16 @@ export class AuthService {
       },
     });
 
-    return { accessToken, refreshToken };
+    return {
+      message: '구글 소셜로그인에 성공했습니다.',
+      accessToken,
+      refreshToken,
+      user: {
+        email: user.email,
+        nickname: user.nickname,
+        profileImage: user.profileImage,
+      },
+    };
   }
 
   async logout(userId: number) {
