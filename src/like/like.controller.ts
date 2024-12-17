@@ -1,6 +1,5 @@
 import {
   Controller,
-  Get,
   Post,
   Delete,
   Param,
@@ -19,6 +18,38 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@ne
 export class LikeController {
   constructor(private readonly likeService: LikeService) {}
 
+  // 좋아요 추가
+  @ApiOperation({ summary: '좋아요 추가', description: '플레이리스트에 좋아요를 추가합니다.' })
+  @ApiResponse({
+    status: 201,
+    description: '좋아요가 성공적으로 추가되었습니다.',
+    schema: {
+      example: {
+        message: '좋아요가 추가되었습니다.',
+        playlistId: 123,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: '이미 좋아요가 추가된 상태입니다.',
+    schema: {
+      example: {
+        message: '이미 좋아요를 누른 상태입니다',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: '인증 오류',
+    schema: {
+      example: {
+        statusCode: 401,
+        message: '인증이 필요합니다.',
+        error: 'Unauthorized',
+      },
+    },
+  })
   @Post()
   @ApiOperation({
     summary: '좋아요 추가',
@@ -51,6 +82,40 @@ export class LikeController {
     return this.likeService.addLike(userId, playlistId);
   }
 
+  // 좋아요 해제
+  @ApiOperation({ summary: '좋아요 해제', description: '플레이리스트에 추가된 좋아요를 해제합니다.' })
+  @ApiResponse({
+    status: 200,
+    description: '좋아요가 성공적으로 해제되었습니다.',
+    schema: {
+      example: {
+        message: '좋아요가 해제되었습니다.',
+        playlistId: 123,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: '인증 오류',
+    schema: {
+      example: {
+        statusCode: 401,
+        message: '인증이 필요합니다.',
+        error: 'Unauthorized',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: '좋아요 또는 플레이리스트를 찾을 수 없습니다.',
+    schema: {
+      example: {
+        statusCode: 404,
+        message: '좋아요를 찾을 수 없습니다.',
+        error: 'Not Found',
+      },
+    },
+  })
   @Delete()
   @ApiOperation({
     summary: '좋아요 해제',
