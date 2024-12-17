@@ -56,14 +56,18 @@ export class VideoService {
       id: videoIds.join(','),
     });
 
-    // Step 3: 결과 필터링 및 duration 값 변환 포함
-    return videoResponse.data.items.map((item) => ({
-      youtubeId: item.id,
-      title: item.snippet.title,
-      channelName: item.snippet.channelTitle,
-      thumbnailUrl: item.snippet.thumbnails?.default?.url,
-      duration: this.parseDuration(item.contentDetails.duration),
-    }));
+    // Step 3: 결과 필터링 (제목에만 키워드 포함) 및 duration 값 변환
+    return videoResponse.data.items
+      .filter((item) =>
+        item.snippet.title.toLowerCase().includes(query.keyword.toLowerCase())
+      ) // 제목에만 키워드 포함된 경우만 필터링
+      .map((item) => ({
+        youtubeId: item.id,
+        title: item.snippet.title,
+        channelName: item.snippet.channelTitle,
+        thumbnailUrl: item.snippet.thumbnails?.default?.url,
+        duration: this.parseDuration(item.contentDetails.duration),
+      }));
   }
 
   // 2. 서비스와 유튜브 검색 결과 통합 - source 필드 추가
