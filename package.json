@@ -18,7 +18,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "forever": "forever start -m 999 -a -o log/out.log -e log/err.log dist/main.js",
+    "forever": "forever start -m 999 --minUptime 5000 --spinSleepTime 2000 -a -o log/out.log -e log/err.log dist/main.js",
     "prepare": "husky install"
   },
   "dependencies": {
