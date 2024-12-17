@@ -34,7 +34,7 @@ let AuthController = class AuthController {
     }
     async googleAuthRedirect(req) {
         return {
-            message: '구글 소셜로그인에 성공했습니다',
+            message: 'Google 소셜로그인에 성공했습니다',
             user: req.user,
         };
     }
@@ -58,6 +58,18 @@ __decorate([
         },
     }),
     (0, common_1.Post)('signup'),
+    (0, swagger_1.ApiOperation)({ summary: '회원가입', description: '이메일과 비밀번호로 새로운 계정을 생성합니다.' }),
+    (0, swagger_1.ApiResponse)({
+        status: 201,
+        description: '회원가입 성공',
+        schema: {
+            example: {
+                message: '회원가입이 완료되었습니다.',
+                userId: 1,
+            },
+        },
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: '입력값이 잘못되었습니다.' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [signup_dto_1.SignupDto]),
@@ -87,6 +99,18 @@ __decorate([
         },
     }),
     (0, common_1.Post)('login'),
+    (0, swagger_1.ApiOperation)({ summary: '로그인', description: '이메일과 비밀번호로 로그인하여 JWT를 반환합니다.' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: '로그인에 성공했습니다. 액세스 토큰이 반환됩니다.',
+        schema: {
+            example: {
+                accessToken: 'jwt-token',
+                refreshToken: 'refresh-token',
+            },
+        },
+    }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: '인증에 실패했습니다.' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [login_dto_1.LoginDto]),
@@ -96,6 +120,11 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Google OAuth 로그인', description: 'Google 계정으로 로그인합니다.' }),
     (0, swagger_1.ApiResponse)({ status: 302, description: 'Google 인증 페이지로 리다이렉트됩니다.' }),
     (0, common_1.Get)('google'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Google 로그인 페이지로 리다이렉트',
+        description: 'Google 로그인 페이지로 리다이렉트합니다.',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 302, description: 'Google 로그인 페이지로 리다이렉트합니다.' }),
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('google')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
@@ -118,6 +147,24 @@ __decorate([
         },
     }),
     (0, common_1.Get)('google/callback'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Google 로그인 콜백 처리',
+        description: 'Google 로그인 이후의 콜백을 처리하고 사용자 정보를 반환합니다.',
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Google 소셜로그인에 성공했습니다.',
+        schema: {
+            example: {
+                message: 'Google 소셜로그인에 성공했습니다',
+                user: {
+                    id: '12345',
+                    email: 'example@gmail.com',
+                    name: '사용자 이름',
+                },
+            },
+        },
+    }),
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('google')),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
@@ -149,6 +196,11 @@ __decorate([
     }),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Post)('logout'),
+    (0, swagger_1.ApiOperation)({ summary: '로그아웃', description: '로그아웃을 수행하고 세션을 무효화합니다.' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiResponse)({ status: 200, description: '로그아웃에 성공했습니다.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: '인증이 필요합니다.' }),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),

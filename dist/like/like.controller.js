@@ -70,6 +70,26 @@ __decorate([
         },
     }),
     (0, common_1.Post)(),
+    (0, swagger_1.ApiOperation)({
+        summary: '좋아요 추가',
+        description: '특정 플레이리스트에 좋아요를 추가합니다.',
+    }),
+    (0, swagger_1.ApiParam)({
+        name: 'id',
+        description: '플레이리스트 ID',
+        example: 1,
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 201,
+        description: '좋아요 추가 성공',
+        schema: {
+            example: {
+                message: '좋아요를 추가했습니다.',
+                playlistId: 1,
+            },
+        },
+    }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: '인증이 필요합니다.' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
@@ -111,6 +131,26 @@ __decorate([
         },
     }),
     (0, common_1.Delete)(),
+    (0, swagger_1.ApiOperation)({
+        summary: '좋아요 해제',
+        description: '특정 플레이리스트에 추가된 좋아요를 해제합니다.',
+    }),
+    (0, swagger_1.ApiParam)({
+        name: 'id',
+        description: '플레이리스트 ID',
+        example: 1,
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: '좋아요 해제 성공',
+        schema: {
+            example: {
+                message: '좋아요를 해제했습니다.',
+                playlistId: 1,
+            },
+        },
+    }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: '인증이 필요합니다.' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
@@ -118,6 +158,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], LikeController.prototype, "removeLike", null);
 exports.LikeController = LikeController = __decorate([
+    (0, swagger_1.ApiTags)('좋아요'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.Controller)('/playlists/:id/like'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
