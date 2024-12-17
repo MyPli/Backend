@@ -1,10 +1,9 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { VideoService } from '../video/video.service';
 import { SearchVideoDto } from '../video/dto/search-video.dto';
-import { ApiTags, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { BadRequestException } from '@nestjs/common';
 
-@ApiTags('검색') // Swagger 그룹화
 @Controller('/search')
 export class SearchController {
   constructor(private readonly videoService: VideoService) {}

@@ -12,9 +12,8 @@ import {
 import { VideoService } from './video.service';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiParam, ApiResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiBearerAuth, ApiParam, ApiResponse } from '@nestjs/swagger';
 
-@ApiTags('비디오') // Swagger 그룹화
 @ApiBearerAuth() // JWT 인증 추가
 @Controller('/videos')
 @UseGuards(JwtAuthGuard) // JwtAuthGuard로 인증 적용
