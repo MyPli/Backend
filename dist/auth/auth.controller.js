@@ -46,17 +46,6 @@ let AuthController = class AuthController {
 };
 exports.AuthController = AuthController;
 __decorate([
-    (0, swagger_1.ApiOperation)({ summary: '사용자 회원가입', description: '새로운 사용자 계정을 생성합니다.' }),
-    (0, swagger_1.ApiResponse)({
-        status: 201,
-        description: '회원가입 성공',
-        schema: {
-            example: {
-                message: '회원가입이 완료되었습니다.',
-                userId: 1,
-            },
-        },
-    }),
     (0, common_1.Post)('signup'),
     (0, swagger_1.ApiOperation)({ summary: '회원가입', description: '이메일과 비밀번호로 새로운 계정을 생성합니다.' }),
     (0, swagger_1.ApiResponse)({
@@ -76,28 +65,6 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "signup", null);
 __decorate([
-    (0, swagger_1.ApiOperation)({ summary: '사용자 로그인', description: '이메일과 비밀번호로 로그인합니다.' }),
-    (0, swagger_1.ApiResponse)({
-        status: 200,
-        description: '로그인 성공',
-        schema: {
-            example: {
-                accessToken: 'jwt-access-token',
-                refreshToken: 'jwt-refresh-token',
-            },
-        },
-    }),
-    (0, swagger_1.ApiResponse)({
-        status: 401,
-        description: '인증 오류',
-        schema: {
-            example: {
-                statusCode: 401,
-                message: '이메일 또는 비밀번호가 올바르지 않습니다.',
-                error: 'Unauthorized',
-            },
-        },
-    }),
     (0, common_1.Post)('login'),
     (0, swagger_1.ApiOperation)({ summary: '로그인', description: '이메일과 비밀번호로 로그인하여 JWT를 반환합니다.' }),
     (0, swagger_1.ApiResponse)({
@@ -105,8 +72,14 @@ __decorate([
         description: '로그인에 성공했습니다. 액세스 토큰이 반환됩니다.',
         schema: {
             example: {
+                message: '로그인에 성공했습니다',
                 accessToken: 'jwt-token',
                 refreshToken: 'refresh-token',
+                user: {
+                    email: 'user@example.com',
+                    nickname: 'admin',
+                    profileImage: 'http://example.com/profile.jpg',
+                },
             },
         },
     }),
@@ -117,35 +90,18 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Google OAuth 로그인', description: 'Google 계정으로 로그인합니다.' }),
-    (0, swagger_1.ApiResponse)({ status: 302, description: 'Google 인증 페이지로 리다이렉트됩니다.' }),
-    (0, common_1.Get)('google'),
     (0, swagger_1.ApiOperation)({
         summary: 'Google 로그인 페이지로 리다이렉트',
         description: 'Google 로그인 페이지로 리다이렉트합니다.',
     }),
     (0, swagger_1.ApiResponse)({ status: 302, description: 'Google 로그인 페이지로 리다이렉트합니다.' }),
+    (0, common_1.Get)('google'),
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('google')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "googleAuth", null);
 __decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Google OAuth 콜백', description: 'Google 로그인 후 콜백을 처리합니다.' }),
-    (0, swagger_1.ApiResponse)({
-        status: 200,
-        description: 'Google 로그인 성공',
-        schema: {
-            example: {
-                message: '구글 소셜로그인에 성공했습니다',
-                user: {
-                    email: 'user@example.com',
-                    nickname: 'John Doe',
-                    profileImage: 'http://example.com/profile.jpg',
-                },
-            },
-        },
-    }),
     (0, common_1.Get)('google/callback'),
     (0, swagger_1.ApiOperation)({
         summary: 'Google 로그인 콜백 처리',
@@ -153,14 +109,16 @@ __decorate([
     }),
     (0, swagger_1.ApiResponse)({
         status: 200,
-        description: 'Google 소셜로그인에 성공했습니다.',
+        description: 'Google 로그인 성공',
         schema: {
             example: {
-                message: 'Google 소셜로그인에 성공했습니다',
+                message: '구글 소셜로그인에 성공했습니다',
+                accessToken: 'jwt-token',
+                refreshToken: 'refresh-token',
                 user: {
-                    id: '12345',
-                    email: 'example@gmail.com',
-                    name: '사용자 이름',
+                    email: 'user@example.com',
+                    nickname: 'admin',
+                    profileImage: 'http://example.com/profile.jpg',
                 },
             },
         },
@@ -172,8 +130,9 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "googleAuthRedirect", null);
 __decorate([
+    (0, common_1.Post)('logout'),
+    (0, swagger_1.ApiOperation)({ summary: '로그아웃', description: '로그아웃을 수행하고 세션을 무효화합니다.' }),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: '로그아웃', description: '로그아웃 로직을 수행합니다.' }),
     (0, swagger_1.ApiResponse)({
         status: 201,
         description: '로그아웃 성공',
@@ -194,12 +153,6 @@ __decorate([
             },
         },
     }),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, common_1.Post)('logout'),
-    (0, swagger_1.ApiOperation)({ summary: '로그아웃', description: '로그아웃을 수행하고 세션을 무효화합니다.' }),
-    (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiResponse)({ status: 200, description: '로그아웃에 성공했습니다.' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: '인증이 필요합니다.' }),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),

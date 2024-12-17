@@ -21,9 +21,8 @@ import { AddVideoDto } from './dto/add-video.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Request } from 'express';
 import { Public } from 'src/auth/auth.decorator';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 
-@ApiTags('플레이리스트') // Swagger 그룹화
 @ApiBearerAuth()
 @Controller('/playlists')
 export class PlaylistController {
