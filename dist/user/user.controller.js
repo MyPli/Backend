@@ -52,6 +52,10 @@ let UserController = class UserController {
         const userId = req.user.userId;
         return this.userService.deleteUser(userId);
     }
+    async getLikedPlaylists(req) {
+        const userId = req.user.userId;
+        return this.userService.getLikedPlaylists(userId);
+    }
 };
 exports.UserController = UserController;
 __decorate([
@@ -89,8 +93,16 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UserController.prototype, "deleteUser", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)('me/likes'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UserController.prototype, "getLikedPlaylists", null);
 exports.UserController = UserController = __decorate([
-    (0, common_1.Controller)('users'),
+    (0, common_1.Controller)('/users'),
     __metadata("design:paramtypes", [user_service_1.UserService])
 ], UserController);
 //# sourceMappingURL=user.controller.js.map

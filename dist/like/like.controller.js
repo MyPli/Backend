@@ -12,7 +12,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserLikesController = exports.LikeController = void 0;
+exports.LikeController = void 0;
 const common_1 = require("@nestjs/common");
 const like_service_1 = require("./like.service");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
@@ -53,33 +53,8 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], LikeController.prototype, "removeLike", null);
 exports.LikeController = LikeController = __decorate([
-    (0, common_1.Controller)('playlists/:id/like'),
+    (0, common_1.Controller)('/playlists/:id/like'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [like_service_1.LikeService])
 ], LikeController);
-let UserLikesController = class UserLikesController {
-    constructor(likeService) {
-        this.likeService = likeService;
-    }
-    async getLikedPlaylists(req) {
-        const userId = req.user?.userId;
-        if (!userId) {
-            throw new common_1.UnauthorizedException('인증이 필요합니다.');
-        }
-        return this.likeService.getLikedPlaylists(userId);
-    }
-};
-exports.UserLikesController = UserLikesController;
-__decorate([
-    (0, common_1.Get)(),
-    __param(0, (0, common_1.Req)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
-], UserLikesController.prototype, "getLikedPlaylists", null);
-exports.UserLikesController = UserLikesController = __decorate([
-    (0, common_1.Controller)('users/me/likes'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __metadata("design:paramtypes", [like_service_1.LikeService])
-], UserLikesController);
 //# sourceMappingURL=like.controller.js.map

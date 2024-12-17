@@ -27,7 +27,9 @@ let LikeService = class LikeService {
             where: { userId, playlistId },
         });
         if (existingLike) {
-            return '이미 좋아요를 눌렀습니다.';
+            return {
+                message: '이미 좋아요를 누른 상태입니다',
+            };
         }
         await this.prisma.like.create({
             data: {
@@ -39,14 +41,19 @@ let LikeService = class LikeService {
             where: { id: playlistId },
             data: { likesCount: { increment: 1 } },
         });
-        return `플레이리스트 ID ${playlistId}에 좋아요를 추가했습니다.`;
+        return {
+            message: '좋아요 등록에 성공했습니다',
+            playlistId: playlistId
+        };
     }
     async removeLike(userId, playlistId) {
         const existingLike = await this.prisma.like.findFirst({
             where: { userId, playlistId },
         });
         if (!existingLike) {
-            return '좋아요를 누르지 않은 상태입니다.';
+            return {
+                message: '좋아요를 누르지 않은 상태입니다.'
+            };
         }
         await this.prisma.like.delete({
             where: { id: existingLike.id },
@@ -55,32 +62,10 @@ let LikeService = class LikeService {
             where: { id: playlistId },
             data: { likesCount: { decrement: 1 } },
         });
-        return `플레이리스트 ID ${playlistId}의 좋아요를 해제했습니다.`;
-    }
-    async getLikedPlaylists(userId) {
-        const likes = await this.prisma.like.findMany({
-            where: { userId },
-            include: {
-                playlist: {
-                    include: {
-                        tags: {
-                            include: {
-                                tag: true,
-                            },
-                        },
-                    },
-                },
-            },
-        });
-        if (likes.length === 0) {
-            throw new common_1.NotFoundException('좋아요한 플레이리스트가 없습니다.');
-        }
-        return likes.map((like) => ({
-            id: like.playlist.id,
-            title: like.playlist.title,
-            description: like.playlist.description,
-            tags: like.playlist.tags.map((playlistTag) => playlistTag.tag.name),
-        }));
+        return {
+            message: '좋아요 해제에 성공했습니다',
+            playlistId: playlistId
+        };
     }
 };
 exports.LikeService = LikeService;

@@ -13,6 +13,7 @@ exports.PlaylistService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const googleapis_1 = require("googleapis");
+const client_1 = require("@prisma/client");
 let PlaylistService = class PlaylistService {
     constructor(prisma) {
         this.prisma = prisma;
@@ -160,6 +161,51 @@ let PlaylistService = class PlaylistService {
             videoId,
             message: '곡 제거 성공',
         };
+    }
+    async getPopularPlaylists(limit) {
+        return this.prisma.playlist.findMany({
+            orderBy: { likesCount: 'desc' },
+            take: limit,
+            select: {
+                id: true,
+                title: true,
+                description: true,
+                coverImage: true,
+                likesCount: true,
+                createdAt: true,
+            },
+        });
+    }
+    async getLatestPlaylists(limit) {
+        return this.prisma.playlist.findMany({
+            orderBy: { createdAt: 'desc' },
+            take: limit,
+            select: {
+                id: true,
+                title: true,
+                description: true,
+                coverImage: true,
+                likesCount: true,
+                createdAt: true,
+            },
+        });
+    }
+    async getMyPlaylists(userId, sort = 'latest') {
+        const orderBy = sort === 'alphabetical'
+            ? { title: client_1.Prisma.SortOrder.asc }
+            : { createdAt: client_1.Prisma.SortOrder.desc };
+        return this.prisma.playlist.findMany({
+            where: { userId },
+            orderBy,
+            select: {
+                id: true,
+                title: true,
+                description: true,
+                coverImage: true,
+                likesCount: true,
+                createdAt: true,
+            },
+        });
     }
 };
 exports.PlaylistService = PlaylistService;

@@ -4,7 +4,7 @@ import { CreatePlaylistDto } from './dto/create-playlist.dto';
 import { UpdatePlaylistDto } from './dto/update-playlist.dto';
 import { AddVideoDto } from './dto/add-video.dto';
 import { google } from 'googleapis';
-
+import { Prisma } from '@prisma/client';
 @Injectable()
 export class PlaylistService {
   private readonly youtube;
@@ -207,5 +207,60 @@ export class PlaylistService {
       videoId,
       message: '곡 제거 성공',
     };
+  }
+
+  // 인기 플레이리스트 반환
+  async getPopularPlaylists(limit: number) {
+    return this.prisma.playlist.findMany({
+      orderBy: { likesCount: 'desc' }, // 좋아요 수 내림차순
+      take: limit, // 반환할 플레이리스트 개수
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        coverImage: true,
+        likesCount: true,
+        createdAt: true,
+      },
+    });
+  }
+
+  // 최신 플레이리스트 반환
+  async getLatestPlaylists(limit: number) {
+    return this.prisma.playlist.findMany({
+      orderBy: { createdAt: 'desc' }, // 생성일 내림차순
+      take: limit, // 반환할 플레이리스트 개수
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        coverImage: true,
+        likesCount: true,
+        createdAt: true,
+      },
+    });
+  }
+
+  // 내 플레이리스트 정렬 (기본: 최신순, 옵션: 가나다순)
+  async getMyPlaylists(userId: number, sort: 'latest' | 'alphabetical' = 'latest') {
+    // Prisma SortOrder 사용
+    const orderBy: Prisma.PlaylistOrderByWithRelationInput =
+      sort === 'alphabetical'
+        ? { title: Prisma.SortOrder.asc } // 'asc'로 명시
+        : { createdAt: Prisma.SortOrder.desc }; // 'desc'로 명시
+
+    // 플레이리스트 조회
+    return this.prisma.playlist.findMany({
+      where: { userId },
+      orderBy, // 정렬 적용
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        coverImage: true,
+        likesCount: true,
+        createdAt: true,
+      },
+    });
   }
 }
