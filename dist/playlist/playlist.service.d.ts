@@ -28,4 +28,12 @@ export declare class PlaylistService {
         likesCount: number;
         createdAt: Date;
     }[]>;
+    getMyPlaylists(userId: number, sort?: 'latest' | 'alphabetical'): Promise<{
+        id: number;
+        title: string;
+        description: string;
+        coverImage: string;
+        likesCount: number;
+        createdAt: Date;
+    }[]>;
 }

@@ -17,55 +17,93 @@ const common_1 = require("@nestjs/common");
 const playlist_service_1 = require("./playlist.service");
 const create_playlist_dto_1 = require("./dto/create-playlist.dto");
 const update_playlist_dto_1 = require("./dto/update-playlist.dto");
+const sort_playlist_dto_1 = require("./dto/sort-playlist.dto");
 const add_video_dto_1 = require("./dto/add-video.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
+const auth_decorator_1 = require("../auth/auth.decorator");
 let PlaylistController = class PlaylistController {
     constructor(playlistService) {
         this.playlistService = playlistService;
     }
-    async createPlaylist(dto, req) {
-        const userId = req.user?.userId;
-        if (!userId) {
-            throw new common_1.UnauthorizedException('인증이 필요합니다.');
-        }
-        return this.playlistService.createPlaylist(dto, userId);
-    }
-    async updatePlaylist(id, dto, req) {
-        const userId = req.user?.userId;
-        console.log('Request User ID in Controller:', userId);
-        if (!userId) {
-            throw new common_1.UnauthorizedException('수정 권한이 없습니다.');
-        }
-        return this.playlistService.updatePlaylist(id, userId, dto);
-    }
-    async deletePlaylist(id, req) {
-        const userId = req.user['userId'];
-        console.log('Authenticated User ID:', userId);
-        return this.playlistService.deletePlaylist(id, userId);
-    }
-    async addVideo(id, dto) {
-        return this.playlistService.addVideo(id, dto);
-    }
-    async getPlaylistDetails(id) {
-        return this.playlistService.getPlaylistDetails(id);
-    }
-    async removeVideo(playlistId, videoId) {
-        return this.playlistService.removeVideo(playlistId, videoId);
-    }
     async getPopularPlaylists(limit) {
         const resultLimit = limit ? parseInt(limit.toString(), 10) : 5;
-        const playlists = await this.playlistService.getPopularPlaylists(resultLimit);
-        return { playlists };
+        return this.playlistService.getPopularPlaylists(resultLimit);
     }
     async getLatestPlaylists(limit) {
         const resultLimit = limit ? parseInt(limit.toString(), 10) : 5;
-        const playlists = await this.playlistService.getLatestPlaylists(resultLimit);
-        return { playlists };
+        return this.playlistService.getLatestPlaylists(resultLimit);
+    }
+    async getMyPlaylists(req, query) {
+        const userId = req.user.userId;
+        return this.playlistService.getMyPlaylists(userId, query.sort || 'latest');
+    }
+    async getPlaylistDetails(id) {
+        const parsedId = parseInt(id, 10);
+        return this.playlistService.getPlaylistDetails(parsedId);
+    }
+    async createPlaylist(dto, req) {
+        const userId = req.user?.userId;
+        if (!userId)
+            throw new common_1.UnauthorizedException('인증이 필요합니다.');
+        return this.playlistService.createPlaylist(dto, userId);
+    }
+    async updatePlaylist(id, dto, req) {
+        const parsedId = parseInt(id, 10);
+        const userId = req.user?.userId;
+        return this.playlistService.updatePlaylist(parsedId, userId, dto);
+    }
+    async deletePlaylist(id, req) {
+        const parsedId = parseInt(id, 10);
+        const userId = req.user['userId'];
+        return this.playlistService.deletePlaylist(parsedId, userId);
+    }
+    async addVideo(id, dto) {
+        const parsedId = parseInt(id, 10);
+        return this.playlistService.addVideo(parsedId, dto);
+    }
+    async removeVideo(id, videoId) {
+        const parsedPlaylistId = parseInt(id, 10);
+        const parsedVideoId = parseInt(videoId, 10);
+        return this.playlistService.removeVideo(parsedPlaylistId, parsedVideoId);
     }
 };
 exports.PlaylistController = PlaylistController;
 __decorate([
+    (0, common_1.Get)('popular'),
+    (0, auth_decorator_1.Public)(),
+    __param(0, (0, common_1.Query)('limit')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", Promise)
+], PlaylistController.prototype, "getPopularPlaylists", null);
+__decorate([
+    (0, common_1.Get)('latest'),
+    (0, auth_decorator_1.Public)(),
+    __param(0, (0, common_1.Query)('limit')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", Promise)
+], PlaylistController.prototype, "getLatestPlaylists", null);
+__decorate([
+    (0, common_1.Get)('me'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, sort_playlist_dto_1.PlaylistSortDto]),
+    __metadata("design:returntype", Promise)
+], PlaylistController.prototype, "getMyPlaylists", null);
+__decorate([
+    (0, common_1.Get)(':id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], PlaylistController.prototype, "getPlaylistDetails", null);
+__decorate([
     (0, common_1.Post)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
@@ -74,62 +112,43 @@ __decorate([
 ], PlaylistController.prototype, "createPlaylist", null);
 __decorate([
     (0, common_1.Patch)(':id'),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, update_playlist_dto_1.UpdatePlaylistDto, Object]),
+    __metadata("design:paramtypes", [String, update_playlist_dto_1.UpdatePlaylistDto, Object]),
     __metadata("design:returntype", Promise)
 ], PlaylistController.prototype, "updatePlaylist", null);
 __decorate([
     (0, common_1.Delete)(':id'),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], PlaylistController.prototype, "deletePlaylist", null);
 __decorate([
     (0, common_1.Post)(':id/videos'),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, add_video_dto_1.AddVideoDto]),
+    __metadata("design:paramtypes", [String, add_video_dto_1.AddVideoDto]),
     __metadata("design:returntype", Promise)
 ], PlaylistController.prototype, "addVideo", null);
 __decorate([
-    (0, common_1.Get)(':id'),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", Promise)
-], PlaylistController.prototype, "getPlaylistDetails", null);
-__decorate([
     (0, common_1.Delete)(':id/videos/:videoId'),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Param)('videoId', common_1.ParseIntPipe)),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Param)('videoId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Number]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], PlaylistController.prototype, "removeVideo", null);
-__decorate([
-    (0, common_1.Get)('popular'),
-    __param(0, (0, common_1.Query)('limit')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", Promise)
-], PlaylistController.prototype, "getPopularPlaylists", null);
-__decorate([
-    (0, common_1.Get)('latest'),
-    __param(0, (0, common_1.Query)('limit')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", Promise)
-], PlaylistController.prototype, "getLatestPlaylists", null);
 exports.PlaylistController = PlaylistController = __decorate([
     (0, common_1.Controller)('/playlists'),
-    (0, common_1.UsePipes)(new common_1.ValidationPipe({ transform: true })),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [playlist_service_1.PlaylistService])
 ], PlaylistController);
 //# sourceMappingURL=playlist.controller.js.map
