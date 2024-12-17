@@ -84,22 +84,6 @@ __decorate([
         },
     }),
     (0, common_1.Get)('me'),
-    (0, swagger_1.ApiOperation)({
-        summary: '내 프로필 조회',
-        description: '현재 로그인한 사용자의 프로필을 조회합니다.',
-    }),
-    (0, swagger_1.ApiResponse)({
-        status: 200,
-        description: '프로필 조회 성공',
-        schema: {
-            example: {
-                userId: 1,
-                email: 'user@example.com',
-                nickname: 'UserNickname',
-                profileImage: 'https://example.com/image.png',
-            },
-        },
-    }),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -137,26 +121,6 @@ __decorate([
         },
     }),
     (0, common_1.Patch)('me/nickname'),
-    (0, swagger_1.ApiOperation)({
-        summary: '닉네임 업데이트',
-        description: '현재 사용자의 닉네임을 업데이트합니다.',
-    }),
-    (0, swagger_1.ApiBody)({
-        schema: {
-            example: { nickname: 'NewNickname' },
-        },
-    }),
-    (0, swagger_1.ApiResponse)({
-        status: 200,
-        description: '닉네임 업데이트 성공',
-        schema: {
-            example: {
-                message: '닉네임이 성공적으로 업데이트되었습니다.',
-                user: { userId: 1, nickname: 'NewNickname' },
-            },
-        },
-    }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: '닉네임이 필요합니다.' }),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)('nickname')),
     __metadata("design:type", Function),
@@ -194,36 +158,9 @@ __decorate([
             },
         },
     }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: '파일이 업로드되지 않았습니다.' }),
     (0, common_1.Patch)('me/profile-image'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file')),
-    (0, swagger_1.ApiOperation)({
-        summary: '프로필 이미지 업데이트',
-        description: '현재 사용자의 프로필 이미지를 업데이트합니다.',
-    }),
-    (0, swagger_1.ApiConsumes)('multipart/form-data'),
-    (0, swagger_1.ApiBody)({
-        description: '업로드할 이미지 파일',
-        schema: {
-            type: 'object',
-            properties: {
-                file: {
-                    type: 'string',
-                    format: 'binary',
-                },
-            },
-        },
-    }),
-    (0, swagger_1.ApiResponse)({
-        status: 200,
-        description: '프로필 이미지 업데이트 성공',
-        schema: {
-            example: {
-                message: '프로필 이미지가 성공적으로 업데이트되었습니다.',
-                user: { userId: 1, profileImage: 'https://example.com/image.png' },
-            },
-        },
-    }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: '파일이 업로드되지 않았습니다.' }),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.UploadedFile)()),
     __metadata("design:type", Function),
@@ -253,54 +190,12 @@ __decorate([
         },
     }),
     (0, common_1.Delete)('me'),
-    (0, swagger_1.ApiOperation)({
-        summary: '회원 탈퇴',
-        description: '현재 사용자의 계정을 삭제합니다.',
-    }),
-    (0, swagger_1.ApiResponse)({
-        status: 200,
-        description: '회원 탈퇴 성공',
-        schema: {
-            example: {
-                message: '계정이 성공적으로 삭제되었습니다.',
-            },
-        },
-    }),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UserController.prototype, "deleteUser", null);
 __decorate([
-    (0, swagger_1.ApiOperation)({
-        summary: '좋아요한 플레이리스트 조회',
-        description: '사용자가 좋아요한 플레이리스트를 조회합니다.',
-    }),
-    (0, swagger_1.ApiResponse)({
-        status: 200,
-        description: '좋아요한 플레이리스트 목록 반환',
-        schema: {
-            example: [
-                {
-                    id: 1,
-                    title: 'Chill Vibes',
-                    description: 'A playlist for relaxing.',
-                    tags: ['chill', 'relax', 'vibe'],
-                },
-            ],
-        },
-    }),
-    (0, swagger_1.ApiResponse)({
-        status: 401,
-        description: '인증 실패',
-        schema: {
-            example: {
-                statusCode: 401,
-                message: '유효하지 않거나 만료된 토큰입니다',
-                error: 'Unauthorized',
-            },
-        },
-    }),
     (0, common_1.Get)('me/likes'),
     (0, swagger_1.ApiOperation)({
         summary: '좋아요한 플레이리스트 조회',
@@ -326,16 +221,36 @@ __decorate([
             ],
         },
     }),
+    (0, swagger_1.ApiResponse)({
+        status: 400,
+        description: '좋아요한 플레이리스트가 없을때',
+        schema: {
+            example: {
+                statusCode: 400,
+                message: '좋아요한 플레이리스트가 없습니다',
+                error: 'Not Found',
+            },
+        },
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 401,
+        description: '인증 실패',
+        schema: {
+            example: {
+                statusCode: 401,
+                message: '유효하지 않거나 만료된 토큰입니다',
+                error: 'Unauthorized',
+            },
+        },
+    }),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UserController.prototype, "getLikedPlaylists", null);
 exports.UserController = UserController = __decorate([
-    (0, swagger_1.ApiTags)('사용자'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.Controller)('/users'),
-    (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [user_service_1.UserService])
 ], UserController);
