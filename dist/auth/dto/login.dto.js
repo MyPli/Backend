@@ -11,14 +11,23 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LoginDto = void 0;
 const class_validator_1 = require("class-validator");
+const swagger_1 = require("@nestjs/swagger");
 class LoginDto {
 }
 exports.LoginDto = LoginDto;
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        example: 'admin@mail.com',
+        description: '사용자의 이메일 주소',
+    }),
     (0, class_validator_1.IsEmail)({}, { message: '올바른 이메일 형식이어야 합니다.' }),
     __metadata("design:type", String)
 ], LoginDto.prototype, "email", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        example: 'test1234',
+        description: '사용자의 비밀번호',
+    }),
     (0, class_validator_1.IsString)({ message: '비밀번호는 문자열이어야 합니다.' }),
     (0, class_validator_1.MinLength)(6, { message: '비밀번호는 최소 6자 이상이어야 합니다.' }),
     __metadata("design:type", String)

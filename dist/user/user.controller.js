@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const user_service_1 = require("./user.service");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const platform_express_1 = require("@nestjs/platform-express");
+const swagger_1 = require("@nestjs/swagger");
 let UserController = class UserController {
     constructor(userService) {
         this.userService = userService;
@@ -59,7 +60,29 @@ let UserController = class UserController {
 };
 exports.UserController = UserController;
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiOperation)({ summary: '내 정보 조회', description: 'JWT 토큰을 이용해 현재 사용자 정보를 가져옵니다.' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: '사용자 정보 반환',
+        schema: {
+            example: {
+                email: 'admin@mail.com',
+                nickname: 'admin',
+                profileImage: 'http://example.com/profile.jpg',
+            },
+        },
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 401,
+        description: '인증 실패',
+        schema: {
+            example: {
+                statusCode: 401,
+                message: '유효하지 않거나 만료된 토큰입니다',
+                error: 'Unauthorized',
+            },
+        },
+    }),
     (0, common_1.Get)('me'),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
@@ -67,7 +90,36 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], UserController.prototype, "getUserProfile", null);
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiOperation)({ summary: '닉네임 변경', description: '사용자의 닉네임을 업데이트합니다.' }),
+    (0, swagger_1.ApiBody)({
+        description: '새로운 닉네임',
+        schema: { example: { nickname: 'newNickname' } },
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: '닉네임이 성공적으로 업데이트됨',
+        schema: {
+            example: {
+                message: '닉네임이 성공적으로 업데이트되었습니다.',
+                user: {
+                    id: 1,
+                    nickname: 'newNickname',
+                    profileImage: 'http://example.com/image.png',
+                },
+            },
+        },
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 401,
+        description: '인증 실패',
+        schema: {
+            example: {
+                statusCode: 401,
+                message: '유효하지 않거나 만료된 토큰입니다',
+                error: 'Unauthorized',
+            },
+        },
+    }),
     (0, common_1.Patch)('me/nickname'),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)('nickname')),
@@ -76,7 +128,36 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], UserController.prototype, "updateNickname", null);
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiOperation)({
+        summary: '프로필 이미지 업로드',
+        description: '사용자의 프로필 이미지를 파일 형식으로 업로드하고 업데이트합니다.',
+    }),
+    (0, swagger_1.ApiConsumes)('multipart/form-data'),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: '프로필 이미지가 성공적으로 업데이트됨',
+        schema: {
+            example: {
+                message: '프로필 이미지가 성공적으로 업데이트되었습니다.',
+                user: {
+                    id: 1,
+                    nickname: 'updatedNickname',
+                    profileImage: 'http://example.com/new-image.png',
+                },
+            },
+        },
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 401,
+        description: '인증 실패',
+        schema: {
+            example: {
+                statusCode: 401,
+                message: '유효하지 않거나 만료된 토큰입니다',
+                error: 'Unauthorized',
+            },
+        },
+    }),
     (0, common_1.Patch)('me/profile-image'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file')),
     __param(0, (0, common_1.Req)()),
@@ -86,7 +167,27 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], UserController.prototype, "updateProfileImage", null);
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiOperation)({ summary: '회원 탈퇴', description: '사용자 계정을 삭제합니다.' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: '회원탈퇴 성공',
+        schema: {
+            example: {
+                message: '회원탈퇴에 성공했습니다',
+            },
+        },
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 401,
+        description: '인증 실패',
+        schema: {
+            example: {
+                statusCode: 401,
+                message: '유효하지 않거나 만료된 토큰입니다',
+                error: 'Unauthorized',
+            },
+        },
+    }),
     (0, common_1.Delete)('me'),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
@@ -94,7 +195,35 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], UserController.prototype, "deleteUser", null);
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiOperation)({
+        summary: '좋아요한 플레이리스트 조회',
+        description: '사용자가 좋아요한 플레이리스트를 조회합니다.',
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: '좋아요한 플레이리스트 목록 반환',
+        schema: {
+            example: [
+                {
+                    id: 1,
+                    title: 'Chill Vibes',
+                    description: 'A playlist for relaxing.',
+                    tags: ['chill', 'relax', 'vibe'],
+                },
+            ],
+        },
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 401,
+        description: '인증 실패',
+        schema: {
+            example: {
+                statusCode: 401,
+                message: '유효하지 않거나 만료된 토큰입니다',
+                error: 'Unauthorized',
+            },
+        },
+    }),
     (0, common_1.Get)('me/likes'),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
@@ -103,6 +232,8 @@ __decorate([
 ], UserController.prototype, "getLikedPlaylists", null);
 exports.UserController = UserController = __decorate([
     (0, common_1.Controller)('/users'),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [user_service_1.UserService])
 ], UserController);
 //# sourceMappingURL=user.controller.js.map
