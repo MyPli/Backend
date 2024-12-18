@@ -174,24 +174,36 @@ export class PlaylistController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: '플레이리스트 생성', description: '새로운 플레이리스트를 생성합니다.' })
+  @ApiOperation({
+    summary: '플레이리스트 생성',
+    description: `새로운 플레이리스트를 생성하고 첫 번째 곡을 동시에 추가합니다.
+                  첫 번째 곡의 썸네일이 플레이리스트의 커버 이미지로 설정됩니다.`,
+  })
   @ApiResponse({
     status: 201,
-    description: '플레이리스트 생성 성공',
+    description: '플레이리스트 생성 및 첫 번째 곡 추가 성공',
     schema: {
       example: {
         id: 1,
-        title: 'My Playlist',
-        description: '공부할 때 듣기 좋은 음악',
-        tags: ['공부', '집중'],
-        message: '플레이리스트 생성 성공',
+        title: 'My Favorite Songs',
+        description: '즐겨듣는 노래 모음',
+        coverImage: 'https://example.com/thumbnail.jpg',
+        tags: ['Pop', 'K-Pop'],
+        videos: [
+          {
+            id: 101,
+            title: 'My Song',
+            url: 'https://youtube.com/watch?v=abc123',
+          },
+        ],
+        message: '플레이리스트 생성 및 첫 번째 곡 추가 성공',
       },
     },
   })
   @ApiResponse({
     status: 400,
     description: '필수 데이터 누락',
-    schema: { example: { message: '제목과 태그는 필수입니다.' } },
+    schema: { example: { message: '제목과 태그, 첫번째 비디오 값은 필수입니다.' } },
   })
   @ApiResponse({
     status: 401,
@@ -201,14 +213,7 @@ export class PlaylistController {
   async createPlaylist(@Body() dto: CreatePlaylistDto, @Req() req): Promise<any> {
     const userId = req.user?.userId;
     const playlist = await this.playlistService.createPlaylist(dto, userId);
-  
-    return {
-      id: playlist.id,
-      title: playlist.title,
-      description: playlist.description,
-      tags: playlist.tags, // 안전하게 반환
-      message: '플레이리스트 생성 성공',
-    };
+    return playlist;
   }
   
   
