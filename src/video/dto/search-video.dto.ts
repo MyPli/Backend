@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class SearchVideoDto {
   @ApiProperty({
-    example: 'aespa MV',
+    example: '뉴진스',
     description: '검색할 키워드입니다.',
   })
   @IsString()
