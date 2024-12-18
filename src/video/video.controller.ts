@@ -12,7 +12,7 @@ import {
 import { VideoService } from './video.service';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiOperation, ApiBearerAuth, ApiParam, ApiResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiBearerAuth, ApiParam, ApiResponse, ApiBody } from '@nestjs/swagger';
 
 @ApiBearerAuth() // JWT 인증 추가
 @Controller('/videos')
@@ -32,6 +32,19 @@ export class VideoController {
     description: '플레이리스트 ID',
     type: Number,
   })
+  @ApiBody({
+    type: [UpdateOrderDto], // 배열로 인식시키기
+    description: '동영상 ID와 순서 정보를 포함하는 배열',
+    examples: {
+      example1: {
+        summary: '예시 데이터',
+        value: [
+          { id: 1, order: 1 },
+          { id: 2, order: 2 },
+        ],
+      },
+    },
+  })
   @ApiResponse({
     status: 200,
     description: '동영상 순서 업데이트 성공',
@@ -45,9 +58,9 @@ export class VideoController {
   async updateOrder(
     @Param('playlistId', ParseIntPipe) playlistId: number,
     @Body() dto: UpdateOrderDto[],
-    @Request() req: any, // 요청에서 사용자 정보 추출
+    @Request() req: any,
   ) {
-    const userId = req.user.userId; // 인증된 사용자 ID
+    const userId = req.user.userId;
     return this.videoService.updateOrder(playlistId, dto, userId);
   }
 }
