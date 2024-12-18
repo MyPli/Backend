@@ -19,6 +19,11 @@ export class LikeController {
 
   // 좋아요 추가
   @ApiOperation({ summary: '좋아요 추가', description: '플레이리스트에 좋아요를 추가합니다.' })
+  @ApiParam({
+    name: 'id',
+    description: '좋아요를 추가할 플레이리스트의 ID',
+    example: 123,
+  })
   @ApiResponse({
     status: 201,
     description: '좋아요가 성공적으로 추가되었습니다.',
@@ -63,6 +68,11 @@ export class LikeController {
 
   // 좋아요 해제
   @ApiOperation({ summary: '좋아요 해제', description: '플레이리스트에 추가된 좋아요를 해제합니다.' })
+  @ApiParam({
+    name: 'id',
+    description: '좋아요를 해제할 플레이리스트의 ID',
+    example: 123,
+  })
   @ApiResponse({
     status: 200,
     description: '좋아요가 성공적으로 해제되었습니다.',

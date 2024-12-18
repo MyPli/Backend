@@ -1,7 +1,9 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { plainToInstance } from 'class-transformer';
 import { CreatePlaylistDto } from './dto/create-playlist.dto';
 import { UpdatePlaylistDto } from './dto/update-playlist.dto';
+import { PlaylistVideoDto } from './dto/playlist-video.dto';
 import { AddVideoDto } from './dto/add-video.dto';
 import { google } from 'googleapis';
 import { Prisma } from '@prisma/client';
@@ -18,104 +20,115 @@ export class PlaylistService {
 
   // 1. 플레이리스트 생성
   async createPlaylist(dto: CreatePlaylistDto, userId: number): Promise<any> {
-    if (!userId) {
-      throw new Error('유효하지 않은 사용자입니다.');
-    }
+    const { title, description, tags = [] } = dto;
   
-    const { title, description, tags } = dto;
+    // 태그 유효성 검사
+    const validatedTags = tags.filter((tag) => tag && tag.trim() !== "");
   
     const playlist = await this.prisma.playlist.create({
       data: {
         title,
         description,
-        user: {
-          connect: { id: userId }, // userId로 연결
+        user: { connect: { id: userId } },
+        tags: {
+          create: validatedTags.map((tag) => ({
+            tag: {
+              connectOrCreate: {
+                where: { name: tag },
+                create: { name: tag },
+              },
+            },
+          })),
+        },
+      },
+      include: {
+        tags: {
+          include: { tag: true },
         },
       },
     });
   
-    if (tags && tags.length > 0) {
-      await Promise.all(
-        tags.map(async (tag) => {
-          await this.prisma.playlistTag.create({
-            data: {
-              playlist: { connect: { id: playlist.id } }, // Playlist 관계 설정
-              tag: {
-                connectOrCreate: {
-                  where: { name: tag }, // 태그 이름으로 검색
-                  create: { name: tag }, // 태그가 없으면 새로 생성
-                },
-              },
-            },
-          });
-          
-        }),
-      );
-    }
-  
-    return playlist;
+    return {
+      id: playlist.id,
+      title: playlist.title,
+      description: playlist.description,
+      tags: playlist.tags.map((playlistTag) => playlistTag.tag.name),
+      message: "플레이리스트 생성 성공",
+    };
   }
-
+  
+  
   // 2. 플레이리스트 수정
-  async updatePlaylist(
-    id: number,
-    userId: number,
-    dto: UpdatePlaylistDto,
-  ): Promise<any> {
-    const { title, description, tags } = dto;
-
+  async updatePlaylist(id: number, userId: number, dto: UpdatePlaylistDto): Promise<any> {
+    const { title, description, tags = [] } = dto;
+  
     const playlist = await this.prisma.playlist.findUnique({
       where: { id },
       include: { tags: true },
     });
-    
+  
     if (!playlist) {
       throw new NotFoundException(`플레이리스트를 찾을 수 없습니다.`);
     }
   
     if (playlist.userId !== userId) {
-      throw new UnauthorizedException('수정 권한이 없습니다.');
+      throw new UnauthorizedException("수정 권한이 없습니다.");
     }
   
-    const updatedPlaylist = await this.prisma.playlist.update({
+    // 태그 유효성 검사
+    const validatedTags = tags.filter((tag) => tag && tag.trim() !== "");
+  
+    // 플레이리스트 업데이트
+    await this.prisma.playlist.update({
       where: { id },
       data: { title, description },
     });
   
-    if (tags && tags.length > 0) {
-      await this.prisma.playlistTag.deleteMany({ where: { playlistId: id } });
-  
-      await Promise.all(
-        tags.map(async (tag) => {
-          await this.prisma.playlistTag.create({
-            data: {
-              playlist: { connect: { id } },
-              tag: {
-                connectOrCreate: {
-                  where: { name: tag },
-                  create: { name: tag },
-                },
+    // 기존 태그 삭제 및 새 태그 추가
+    await this.prisma.playlistTag.deleteMany({ where: { playlistId: id } });
+    await Promise.all(
+      validatedTags.map(async (tag) => {
+        await this.prisma.playlistTag.create({
+          data: {
+            playlist: { connect: { id } },
+            tag: {
+              connectOrCreate: {
+                where: { name: tag },
+                create: { name: tag },
               },
             },
-          });
-        }),
-      );
-    }
+          },
+        });
+      }),
+    );
   
-    return updatedPlaylist;
-  }
+    const updatedPlaylist = await this.prisma.playlist.findUnique({
+      where: { id },
+      include: {
+        tags: {
+          include: { tag: true },
+        },
+      },
+    });
+  
+    return {
+      id: updatedPlaylist.id,
+      title: updatedPlaylist.title,
+      description: updatedPlaylist.description,
+      tags: updatedPlaylist.tags.map((playlistTag) => playlistTag.tag.name),
+      message: "플레이리스트 수정 성공",
+    };
+  }  
   
 
   // 3. 플레이리스트 삭제
-  async deletePlaylist(id: number, userId: number): Promise<string> {
-
+  async deletePlaylist(id: number, userId: number): Promise<{ id: number; message: string }> {
     const playlist = await this.prisma.playlist.findUnique({ where: { id } });
   
     if (!playlist || playlist.userId !== userId) {
       throw new UnauthorizedException('삭제 권한이 없습니다.');
     }
   
-
     // 1. 동영상 삭제
     await this.prisma.video.deleteMany({
       where: { playlistId: id },
@@ -133,23 +146,31 @@ export class PlaylistService {
   
     // 4. 플레이리스트 삭제
     await this.prisma.playlist.delete({ where: { id } });
-    return `플레이리스트 ID ${id} 삭제 완료`;
+  
+    return {
+      id,
+      message: '플레이리스트 삭제 성공',
+    };
   }
   
 
   // 4. 동영상 추가
   async addVideo(playlistId: number, dto: AddVideoDto): Promise<any> {
     const { youtubeId, title, channelName, thumbnailUrl, duration, order } = dto;
-
+  
+    if (!youtubeId || youtubeId.trim() === "") {
+      throw new BadRequestException("유효한 YouTube ID가 필요합니다."); // youtubeId 필수 확인
+    }
+  
     const playlist = await this.prisma.playlist.findUnique({ where: { id: playlistId } });
     if (!playlist) {
       throw new NotFoundException(`ID ${playlistId}를 찾을 수 없습니다.`);
     }
-
+  
     const video = await this.prisma.video.create({
       data: {
         playlistId,
-        youtubeId,
+        youtubeId: youtubeId.trim(), // youtubeId 공백 제거 후 저장
         title,
         channelName,
         thumbnailUrl,
@@ -157,40 +178,51 @@ export class PlaylistService {
         order: order ?? 0,
       },
     });
-
+  
     return video;
   }
+  
 
   // 5. 플레이리스트 상세 조회
   async getPlaylistDetails(id: number): Promise<any> {
     const playlist = await this.prisma.playlist.findUnique({
       where: { id },
       include: {
-        tags: true,
+        tags: { include: { tag: true } },
         videos: {
           select: {
             id: true,
-            title: true,
             youtubeId: true,
-            thumbnailUrl: true,
+            title: true,
           },
         },
       },
     });
-
+  
     if (!playlist) {
-      throw new NotFoundException(`플레이리스트를 찾을 수 없습니다.`);
+      throw new NotFoundException('플레이리스트를 찾을 수 없습니다.');
     }
-
-    return {
-      ...playlist,
-      videos: playlist.videos.map((video) => ({
+  
+    // youtubeId 검사 및 변환
+    const videos = playlist.videos.map((video) => {
+      const youtubeId = video.youtubeId && video.youtubeId.trim() ? video.youtubeId.trim() : null;
+      return {
         id: video.id,
         title: video.title,
-        url: `https://youtube.com/watch?v=${video.youtubeId}`,
-      })),
+        url: youtubeId ? `https://youtube.com/watch?v=${youtubeId}` : null,
+      };
+    });
+    
+    return {
+      id: playlist.id,
+      title: playlist.title,
+      description: playlist.description,
+      tags: playlist.tags.map((playlistTag) => playlistTag.tag.name),
+      videos,
     };
   }
+  
+
 
   // 6. 플레이리스트 곡 제거
   async removeVideo(playlistId: number, videoId: number): Promise<any> {
@@ -248,19 +280,21 @@ export class PlaylistService {
       sort === 'alphabetical'
         ? { title: Prisma.SortOrder.asc } // 'asc'로 명시
         : { createdAt: Prisma.SortOrder.desc }; // 'desc'로 명시
-
-    // 플레이리스트 조회
+  
+    // 플레이리스트 조회 (videos 필드 포함)
     return this.prisma.playlist.findMany({
       where: { userId },
-      orderBy, // 정렬 적용
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        coverImage: true,
-        likesCount: true,
-        createdAt: true,
+      orderBy,
+      include: {
+        videos: {
+          select: {
+            id: true,
+            youtubeId: true,
+            title: true,
+            duration: true,
+          },
+        },
       },
     });
-  }
+  }  
 }

@@ -192,12 +192,14 @@ export class UserController {
           title: 'Chill Vibes',
           description: '편안한 음악 모음',
           coverImage: 'https://example.com/image1.png',
+          tags: ['chill', 'relax'],
         },
         {
           id: 2,
           title: 'Workout Mix',
           description: '운동할 때 듣기 좋은 플레이리스트',
           coverImage: 'https://example.com/image2.png',
+          tags: ['excite', 'exer'],
         },
       ],
     },
@@ -225,7 +227,14 @@ export class UserController {
     },
   })
   async getLikedPlaylists(@Req() req: any): Promise<any[]> {
-    const userId = req.user.userId; // 인증된 사용자 ID 가져오기
-    return this.userService.getLikedPlaylists(userId);
-  }
+    const userId = req.user.userId;
+    const playlists = await this.userService.getLikedPlaylists(userId);
+    return playlists.map((playlist) => ({
+      id: playlist.id,
+      title: playlist.title,
+      description: playlist.description,
+      coverImage: playlist.coverImage,
+      tags: playlist.tags?.map((tag) => tag.name) || [],
+    }));
+  }  
 }
