@@ -55,6 +55,21 @@ export class VideoController {
       ],
     },
   })
+  @ApiResponse({
+    status: 404,
+    description: '존재하지 않는 플레이리스트',
+    schema: { example: { message: '플레이리스트를 찾을 수 없습니다.' } },
+  })
+  @ApiResponse({
+    status: 401,
+    description: '인증 오류',
+    schema: { example: { message: '인증이 필요합니다.' } },
+  })
+  @ApiResponse({
+    status: 400,
+    description: '잘못된 입력 데이터',
+    schema: { example: { message: '입력값이 유효하지 않습니다.' } },
+  })
   async updateOrder(
     @Param('playlistId', ParseIntPipe) playlistId: number,
     @Body() dto: UpdateOrderDto[],

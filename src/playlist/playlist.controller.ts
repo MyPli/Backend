@@ -155,6 +155,16 @@ export class PlaylistController {
       },
     },
   })
+  @ApiResponse({
+    status: 404,
+    description: '존재하지 않는 플레이리스트',
+    schema: { example: { message: '플레이리스트를 찾을 수 없습니다.' } },
+  })
+  @ApiResponse({
+    status: 401,
+    description: '인증 오류',
+    schema: { example: { message: '인증이 필요합니다.' } },
+  })  
   async getPlaylistDetails(@Param('id') id: string): Promise<any> {
     const playlist = await this.playlistService.getPlaylistDetails(parseInt(id, 10));
 
@@ -177,6 +187,16 @@ export class PlaylistController {
         message: '플레이리스트 생성 성공',
       },
     },
+  })
+  @ApiResponse({
+    status: 400,
+    description: '필수 데이터 누락',
+    schema: { example: { message: '제목과 태그는 필수입니다.' } },
+  })
+  @ApiResponse({
+    status: 401,
+    description: '인증 오류',
+    schema: { example: { message: '인증이 필요합니다.' } },
   })
   async createPlaylist(@Body() dto: CreatePlaylistDto, @Req() req): Promise<any> {
     const userId = req.user?.userId;
@@ -209,6 +229,21 @@ export class PlaylistController {
       },
     },
   })
+  @ApiResponse({
+    status: 404,
+    description: '존재하지 않는 플레이리스트',
+    schema: { example: { message: '플레이리스트를 찾을 수 없습니다.' } },
+  })
+  @ApiResponse({
+    status: 401,
+    description: '인증 오류',
+    schema: { example: { message: '인증이 필요합니다.' } },
+  })
+  @ApiResponse({
+    status: 400,
+    description: '잘못된 입력 데이터',
+    schema: { example: { message: '입력값이 유효하지 않습니다.' } },
+  })  
   async updatePlaylist(
     @Param('id') id: string,
     @Body() dto: UpdatePlaylistDto,
@@ -285,7 +320,17 @@ export class PlaylistController {
         },
       ],
     },
-  })  
+  })
+  @ApiResponse({
+    status: 400,
+    description: '검색어 누락',
+    schema: { example: { message: '검색어는 필수입니다.' } },
+  })
+  @ApiResponse({
+    status: 404,
+    description: '검색 결과 없음',
+    schema: { example: { message: '검색 결과를 찾을 수 없습니다.' } },
+  })    
   async searchVideos(@Query() query: SearchVideoDto) {
     const videos = await this.videoService.searchVideos(query);
     return videos.map((video) => ({
@@ -318,6 +363,21 @@ export class PlaylistController {
       },
     },
   })
+  @ApiResponse({
+    status: 400,
+    description: '필수 데이터 누락',
+    schema: { example: { message: '유효한 동영상 데이터가 필요합니다.' } },
+  })
+  @ApiResponse({
+    status: 404,
+    description: '플레이리스트를 찾을 수 없습니다.',
+    schema: { example: { message: '플레이리스트를 찾을 수 없습니다.' } },
+  })
+  @ApiResponse({
+    status: 401,
+    description: '인증 오류',
+    schema: { example: { message: '인증이 필요합니다.' } },
+  })
   async addVideoToPlaylist(
     @Param('id') playlistId: string,
     @Body() dto: AddVideoDto,
@@ -349,6 +409,16 @@ export class PlaylistController {
         message: '곡 제거 성공',
       },
     },
+  })
+  @ApiResponse({
+    status: 404,
+    description: '곡 또는 플레이리스트를 찾을 수 없습니다.',
+    schema: { example: { message: '곡을 찾을 수 없습니다.' } },
+  })
+  @ApiResponse({
+    status: 401,
+    description: '인증 오류',
+    schema: { example: { message: '인증이 필요합니다.' } },
   })
   async removeVideo(@Param('id') id: string, @Param('videoId') videoId: string): Promise<any> {
     await this.playlistService.removeVideo(parseInt(id, 10), parseInt(videoId, 10));
