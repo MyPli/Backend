@@ -227,21 +227,45 @@ export class PlaylistController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: '플레이리스트 삭제', description: '지정된 ID의 플레이리스트를 삭제합니다.' })
+  @ApiOperation({
+    summary: '플레이리스트 삭제',
+    description: '지정된 ID의 플레이리스트를 삭제합니다.',
+  })
   @ApiResponse({
     status: 200,
     description: '플레이리스트 삭제 성공',
     schema: {
       example: {
-        message: '플레이리스트가 성공적으로 삭제되었습니다.',
+        id: 1, // 삭제된 플레이리스트의 ID
+        message: '플레이리스트 삭제 성공',
       },
     },
-  })  
-  async deletePlaylist(@Param('id') id: string, @Req() req: Request): Promise<string> {
+  })
+  @ApiResponse({
+    status: 404,
+    description: '플레이리스트를 찾을 수 없습니다.',
+    schema: {
+      example: {
+        message: '플레이리스트를 찾을 수 없습니다.',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: '인증 오류',
+    schema: {
+      example: {
+        message: '인증이 필요합니다.',
+      },
+    },
+  })
+  async deletePlaylist(@Param('id') id: string, @Req() req: Request): Promise<any> {
     const parsedId = parseInt(id, 10);
     const userId = req.user['userId'];
-    return this.playlistService.deletePlaylist(parsedId, userId);
+    const result = await this.playlistService.deletePlaylist(parsedId, userId);
+    return result; // 서비스에서 반환된 결과를 그대로 반환
   }
+
 
   @Get('videos/search')
   @ApiOperation({ summary: '유튜브 동영상 검색', description: '유튜브 API를 통해 동영상을 검색합니다.' })

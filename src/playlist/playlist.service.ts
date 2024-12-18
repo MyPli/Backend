@@ -122,15 +122,13 @@ export class PlaylistService {
   
 
   // 3. 플레이리스트 삭제
-  async deletePlaylist(id: number, userId: number): Promise<string> {
-
+  async deletePlaylist(id: number, userId: number): Promise<{ id: number; message: string }> {
     const playlist = await this.prisma.playlist.findUnique({ where: { id } });
   
     if (!playlist || playlist.userId !== userId) {
       throw new UnauthorizedException('삭제 권한이 없습니다.');
     }
   
-
     // 1. 동영상 삭제
     await this.prisma.video.deleteMany({
       where: { playlistId: id },
@@ -148,7 +146,11 @@ export class PlaylistService {
   
     // 4. 플레이리스트 삭제
     await this.prisma.playlist.delete({ where: { id } });
-    return `플레이리스트 ID ${id} 삭제 완료`;
+  
+    return {
+      id,
+      message: '플레이리스트 삭제 성공',
+    };
   }
   
 
