@@ -144,12 +144,14 @@ export class PlaylistController {
         id: 1,
         title: 'My Playlist',
         description: '공부할 때 듣기 좋은 음악',
+        coverImage: 'https://img.youtube.com/vi/example/0.jpg',
         tags: ['공부', '집중'],
         videos: [
           {
             id: 101,
             title: '노래 제목',
             url: 'https://youtube.com/watch?v=example',
+            thumbnailUrl: 'https://img.youtube.com/vi/example/0.jpg',
           },
         ],
       },
@@ -167,7 +169,6 @@ export class PlaylistController {
   })  
   async getPlaylistDetails(@Param('id') id: string): Promise<any> {
     const playlist = await this.playlistService.getPlaylistDetails(parseInt(id, 10));
-
     return playlist;
   }
     
@@ -176,27 +177,18 @@ export class PlaylistController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: '플레이리스트 생성',
-    description: `새로운 플레이리스트를 생성하고 첫 번째 곡을 동시에 추가합니다.
-                  첫 번째 곡의 썸네일이 플레이리스트의 커버 이미지로 설정됩니다.`,
+    description: `새로운 플레이리스트를 생성합니다.`,
   })
   @ApiResponse({
     status: 201,
-    description: '플레이리스트 생성 및 첫 번째 곡 추가 성공',
+    description: '플레이리스트 생성 성공',
     schema: {
       example: {
         id: 1,
         title: 'My Favorite Songs',
         description: '즐겨듣는 노래 모음',
-        coverImage: 'https://example.com/thumbnail.jpg',
         tags: ['Pop', 'K-Pop'],
-        videos: [
-          {
-            id: 101,
-            title: 'My Song',
-            url: 'https://youtube.com/watch?v=abc123',
-          },
-        ],
-        message: '플레이리스트 생성 및 첫 번째 곡 추가 성공',
+        message: '플레이리스트 생성 성공',
       },
     },
   })
@@ -361,8 +353,9 @@ export class PlaylistController {
       example: {
         playlistId: 1,
         videoId: 101,
-        title: '노래 제목',
-        url: 'https://youtube.com/watch?v=example',
+        title: 'aespa 에스파 Whiplash MV',
+        url: 'https://youtube.com/watch?v=jWQx2f-CErU',
+        thumbnailUrl: 'https://img.youtube.com/vi/jWQx2f-CErU/0.jpg',
         message: '곡 추가 성공',
         order: 1,
       },
@@ -395,6 +388,7 @@ export class PlaylistController {
       videoId: video.id,
       title: video.title,
       url: `https://youtube.com/watch?v=${video.youtubeId}`,
+      thumbnailUrl: video.thumbnailUrl,
       message: '곡 추가 성공',
       order: video.order,
     };
