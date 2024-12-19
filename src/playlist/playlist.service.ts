@@ -188,13 +188,16 @@ export class PlaylistService {
     const playlist = await this.prisma.playlist.findUnique({
       where: { id },
       include: {
-        tags: { include: { tag: true } },
+        user: { select: { nickname: true } }, // 닉네임 가져오기
+        tags: { include: { tag: { select: { name: true } } } }, // 태그 이름 가져오기
         videos: {
           select: {
             id: true,
             youtubeId: true,
             title: true,
             thumbnailUrl: true,
+            duration: true, // 비디오 길이
+            channelName: true, // 아티스트로 사용할 채널 이름
           },
         },
       },
@@ -204,25 +207,44 @@ export class PlaylistService {
       throw new NotFoundException('플레이리스트를 찾을 수 없습니다.');
     }
   
-    // youtubeId 검사 및 변환
+    // 비디오 총 시간 계산
+    const totalTime = playlist.videos.reduce((sum, video) => sum + (video.duration || 0), 0);
+  
+    // 비디오 데이터 변환
     const videos = playlist.videos.map((video) => {
-      const youtubeId = video.youtubeId && video.youtubeId.trim() ? video.youtubeId.trim() : null;
+      const youtubeId = video.youtubeId?.trim() || null;
       return {
         id: video.id,
         title: video.title,
         url: youtubeId ? `https://youtube.com/watch?v=${youtubeId}` : null,
         thumbnailUrl: video.thumbnailUrl,
+        artist: video.channelName || null, // channelName을 artist로 사용
+        time: this.formatDuration(video.duration || 0), // duration을 포맷
       };
     });
-    
+  
     return {
       id: playlist.id,
       title: playlist.title,
-      description: playlist.description,
-      coverImage: playlist.coverImage,
-      tags: playlist.tags.map((playlistTag) => playlistTag.tag.name),
+      description: playlist.description || null,
+      coverImage: playlist.coverImage || null,
+      tags: playlist.tags.map((tag) => tag.tag.name),
+      createdBy: playlist.user?.nickname || 'Unknown', // 닉네임 사용
+      totalTime: this.formatDuration(totalTime), // 포맷된 총 시간 반환
       videos,
     };
+  }
+  
+  // 초 단위를 hh:mm:ss 또는 mm:ss 형식으로 변환하는 유틸리티 함수
+  private formatDuration(duration: number): string {
+    const hours = Math.floor(duration / 3600);
+    const minutes = Math.floor((duration % 3600) / 60);
+    const seconds = duration % 60;
+  
+    if (hours > 0) {
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }
   
 

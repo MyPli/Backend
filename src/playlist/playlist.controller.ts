@@ -146,12 +146,16 @@ export class PlaylistController {
         description: '공부할 때 듣기 좋은 음악',
         coverImage: 'https://img.youtube.com/vi/example/0.jpg',
         tags: ['공부', '집중'],
+        createdBy: "Jhon Doe",
+        totalTime: '01:25:30',
         videos: [
           {
             id: 101,
             title: '노래 제목',
             url: 'https://youtube.com/watch?v=example',
             thumbnailUrl: 'https://img.youtube.com/vi/example/0.jpg',
+            artist: 'SMTOWN',
+            time: '03:45',
           },
         ],
       },
