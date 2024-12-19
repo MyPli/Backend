@@ -37,8 +37,8 @@ export class AuthController {
         accessToken: 'jwt-token',
         refreshToken: 'refresh-token',
         user: {
-          email: 'user@example.com',
-          nickname: 'admin',
+          email: 'test4@mail.com',
+          nickname: 'Test4',
           profileImage: 'http://example.com/profile.jpg',
         },
       },
