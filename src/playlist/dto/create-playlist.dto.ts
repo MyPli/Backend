@@ -1,5 +1,6 @@
-import { IsString, IsOptional, IsArray } from 'class-validator';
+import { IsString, IsOptional, IsArray, ValidateNested } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+
 
 export class CreatePlaylistDto {
   @ApiProperty({
@@ -10,7 +11,7 @@ export class CreatePlaylistDto {
   title: string;
 
   @ApiProperty({
-    example: '즐겨듣는 노래들을 모았습니다.',
+    example: '즐겨듣는 노래 모음',
     description: '플레이리스트 설명',
     required: false,
   })

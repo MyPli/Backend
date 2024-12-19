@@ -194,6 +194,7 @@ export class PlaylistService {
             id: true,
             youtubeId: true,
             title: true,
+            thumbnailUrl: true,
           },
         },
       },
@@ -210,6 +211,7 @@ export class PlaylistService {
         id: video.id,
         title: video.title,
         url: youtubeId ? `https://youtube.com/watch?v=${youtubeId}` : null,
+        thumbnailUrl: video.thumbnailUrl,
       };
     });
     
@@ -217,6 +219,7 @@ export class PlaylistService {
       id: playlist.id,
       title: playlist.title,
       description: playlist.description,
+      coverImage: playlist.coverImage,
       tags: playlist.tags.map((playlistTag) => playlistTag.tag.name),
       videos,
     };

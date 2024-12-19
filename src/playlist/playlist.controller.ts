@@ -144,12 +144,14 @@ export class PlaylistController {
         id: 1,
         title: 'My Playlist',
         description: '공부할 때 듣기 좋은 음악',
+        coverImage: 'https://img.youtube.com/vi/example/0.jpg',
         tags: ['공부', '집중'],
         videos: [
           {
             id: 101,
             title: '노래 제목',
             url: 'https://youtube.com/watch?v=example',
+            thumbnailUrl: 'https://img.youtube.com/vi/example/0.jpg',
           },
         ],
       },
@@ -167,23 +169,25 @@ export class PlaylistController {
   })  
   async getPlaylistDetails(@Param('id') id: string): Promise<any> {
     const playlist = await this.playlistService.getPlaylistDetails(parseInt(id, 10));
-
     return playlist;
   }
     
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: '플레이리스트 생성', description: '새로운 플레이리스트를 생성합니다.' })
+  @ApiOperation({
+    summary: '플레이리스트 생성',
+    description: `새로운 플레이리스트를 생성합니다.`,
+  })
   @ApiResponse({
     status: 201,
     description: '플레이리스트 생성 성공',
     schema: {
       example: {
         id: 1,
-        title: 'My Playlist',
-        description: '공부할 때 듣기 좋은 음악',
-        tags: ['공부', '집중'],
+        title: 'My Favorite Songs',
+        description: '즐겨듣는 노래 모음',
+        tags: ['Pop', 'K-Pop'],
         message: '플레이리스트 생성 성공',
       },
     },
@@ -191,7 +195,7 @@ export class PlaylistController {
   @ApiResponse({
     status: 400,
     description: '필수 데이터 누락',
-    schema: { example: { message: '제목과 태그는 필수입니다.' } },
+    schema: { example: { message: '제목과 태그, 첫번째 비디오 값은 필수입니다.' } },
   })
   @ApiResponse({
     status: 401,
@@ -201,14 +205,7 @@ export class PlaylistController {
   async createPlaylist(@Body() dto: CreatePlaylistDto, @Req() req): Promise<any> {
     const userId = req.user?.userId;
     const playlist = await this.playlistService.createPlaylist(dto, userId);
-  
-    return {
-      id: playlist.id,
-      title: playlist.title,
-      description: playlist.description,
-      tags: playlist.tags, // 안전하게 반환
-      message: '플레이리스트 생성 성공',
-    };
+    return playlist;
   }
   
   
@@ -346,9 +343,11 @@ export class PlaylistController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ 
     summary: '플레이리스트에 곡 추가', 
-    description: `기존 플레이리스트에 곡(비디오)를 추가합니다.
-                  동영상을 추가할 때 duration 필드는 선택 사항입니다.
-                  값을 제공하지 않아도 되며, 동영상의 길이(초 단위)를 입력하면 됩니다.` })
+    description: `기존 플레이리스트에 곡(비디오)를 추가합니다.<br>
+                  동영상을 추가할 때 duration 필드는 선택 사항입니다.<br>
+                  값을 제공하지 않아도 되며, 동영상의 길이(초 단위)를 입력하면 됩니다. <br>
+                  order 값은 기존 비디오 수를 기준으로 순서가 설정됩니다.<br>
+                  (1로 두어도 알아서 늘어납니다.)` })
   @ApiResponse({
     status: 201,
     description: '곡 추가 성공',
@@ -356,8 +355,9 @@ export class PlaylistController {
       example: {
         playlistId: 1,
         videoId: 101,
-        title: '노래 제목',
-        url: 'https://youtube.com/watch?v=example',
+        title: 'aespa 에스파 Whiplash MV',
+        url: 'https://youtube.com/watch?v=jWQx2f-CErU',
+        thumbnailUrl: 'https://img.youtube.com/vi/jWQx2f-CErU/0.jpg',
         message: '곡 추가 성공',
         order: 1,
       },
@@ -390,6 +390,7 @@ export class PlaylistController {
       videoId: video.id,
       title: video.title,
       url: `https://youtube.com/watch?v=${video.youtubeId}`,
+      thumbnailUrl: video.thumbnailUrl,
       message: '곡 추가 성공',
       order: video.order,
     };
