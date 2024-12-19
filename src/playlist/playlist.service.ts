@@ -20,54 +20,40 @@ export class PlaylistService {
 
   // 1. 플레이리스트 생성
   async createPlaylist(dto: CreatePlaylistDto, userId: number): Promise<any> {
-    const { title, description, tags = [], firstVideo } = dto;
+    const { title, description, tags = [] } = dto;
   
     // 태그 유효성 검사
-    const validatedTags = tags.filter((tag) => tag && tag.trim() !== '');
+    const validatedTags = tags.filter((tag) => tag && tag.trim() !== "");
   
-    // 플레이리스트 생성 및 첫 번째 곡 추가
     const playlist = await this.prisma.playlist.create({
       data: {
         title,
         description,
-        coverImage: firstVideo.thumbnailUrl,
         user: { connect: { id: userId } },
         tags: {
           create: validatedTags.map((tag) => ({
             tag: {
-              connectOrCreate: { where: { name: tag }, create: { name: tag } },
+              connectOrCreate: {
+                where: { name: tag },
+                create: { name: tag },
+              },
             },
           })),
         },
-        videos: {
-          create: {
-            youtubeId: firstVideo.youtubeId,
-            title: firstVideo.title,
-            channelName: firstVideo.channelName,
-            thumbnailUrl: firstVideo.thumbnailUrl,
-            order: firstVideo.order ?? 1,
-            duration: firstVideo.duration || 0, // 기본값 0 설정
-          },
-        },
       },
       include: {
-        tags: { include: { tag: true } },
-        videos: true,
+        tags: {
+          include: { tag: true },
+        },
       },
-    });    
+    });
   
     return {
       id: playlist.id,
       title: playlist.title,
       description: playlist.description,
-      coverImage: playlist.coverImage,
-      tags: playlist.tags.map((t) => t.tag.name),
-      videos: playlist.videos.map((v) => ({
-        id: v.id,
-        title: v.title,
-        url: `https://youtube.com/watch?v=${v.youtubeId}`,
-      })),
-      message: '플레이리스트 생성 및 첫 번째 곡 추가 성공',
+      tags: playlist.tags.map((playlistTag) => playlistTag.tag.name),
+      message: "플레이리스트 생성 성공",
     };
   }
   
@@ -208,6 +194,7 @@ export class PlaylistService {
             id: true,
             youtubeId: true,
             title: true,
+            thumbnailUrl: true,
           },
         },
       },
@@ -224,6 +211,7 @@ export class PlaylistService {
         id: video.id,
         title: video.title,
         url: youtubeId ? `https://youtube.com/watch?v=${youtubeId}` : null,
+        thumbnailUrl: video.thumbnailUrl,
       };
     });
     
@@ -231,6 +219,7 @@ export class PlaylistService {
       id: playlist.id,
       title: playlist.title,
       description: playlist.description,
+      coverImage: playlist.coverImage,
       tags: playlist.tags.map((playlistTag) => playlistTag.tag.name),
       videos,
     };
