@@ -345,7 +345,8 @@ export class PlaylistController {
     summary: '플레이리스트에 곡 추가', 
     description: `기존 플레이리스트에 곡(비디오)를 추가합니다.
                   동영상을 추가할 때 duration 필드는 선택 사항입니다.
-                  값을 제공하지 않아도 되며, 동영상의 길이(초 단위)를 입력하면 됩니다.` })
+                  값을 제공하지 않아도 되며, 동영상의 길이(초 단위)를 입력하면 됩니다. 
+                  order 값은 기존 비디오 수를 기준으로 순서가 설정됩니다.(1로 두어도 알아서 늘어납니다.)` })
   @ApiResponse({
     status: 201,
     description: '곡 추가 성공',
