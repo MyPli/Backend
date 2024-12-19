@@ -119,16 +119,21 @@ export class VideoService {
     return this.parseDuration(durationISO); // ISO 8601 -> 초 변환
   }
 
-  // 4. 플레이리스트에 동영상 추가 - duration 자동 가져오기
-  async addVideoToPlaylist(playlistId: number, dto: AddVideoDto, userId: number) {
-    const playlist = await this.prisma.playlist.findUnique({ where: { id: playlistId } });
+  // 4. 플레이리스트에 동영상 추가 - duration 자동 가져오기, 맨 처음 추가된 경우 커버 이미지 설정
+  async addVideoToPlaylist(playlistId: number, dto: AddVideoDto, userId: number): Promise<any> {
+    const playlist = await this.prisma.playlist.findUnique({
+      where: { id: playlistId },
+      include: { videos: true }, // 기존 비디오 정보 포함
+    });
+  
     if (!playlist) throw new NotFoundException(`Playlist with ID ${playlistId} not found.`);
     if (playlist.userId !== userId) throw new UnauthorizedException('You do not own this playlist.');
-
+  
     // duration이 비어있을 경우 유튜브 API로 가져오기
     const duration = dto.duration || (await this.fetchVideoDuration(dto.youtubeId));
-
-    return this.prisma.video.create({
+  
+    // 새로운 비디오 추가
+    const video = await this.prisma.video.create({
       data: {
         playlistId,
         youtubeId: dto.youtubeId,
@@ -136,9 +141,27 @@ export class VideoService {
         channelName: dto.channelName,
         thumbnailUrl: dto.thumbnailUrl,
         duration: duration,
-        order: dto.order ?? 0,
+        order: playlist.videos.length + 1, // 기존 비디오 수를 기준으로 순서 설정
       },
     });
+  
+    // 만약 비디오가 첫 번째로 추가된 경우에만 커버 이미지를 설정
+    if (playlist.videos.length === 0) {
+      await this.prisma.playlist.update({
+        where: { id: playlistId },
+        data: { coverImage: dto.thumbnailUrl },
+      });
+    }
+  
+    // 반환 데이터 구성
+    return {
+      id: video.id, // 추가된 비디오의 ID
+      youtubeId: video.youtubeId, // 유튜브 ID 추가
+      title: video.title,
+      thumbnailUrl: video.thumbnailUrl,
+      duration: video.duration,
+      order: video.order,
+    };
   }
 
   // 5. 플레이리스트 내 동영상 순서 업데이트
