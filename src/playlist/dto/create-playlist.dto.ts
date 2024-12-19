@@ -1,7 +1,6 @@
 import { IsString, IsOptional, IsArray, ValidateNested } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { AddVideoDto } from './add-video.dto';
-import { Type } from 'class-transformer';
+
 
 export class CreatePlaylistDto {
   @ApiProperty({
@@ -12,7 +11,7 @@ export class CreatePlaylistDto {
   title: string;
 
   @ApiProperty({
-    example: '즐겨듣는 노래들을 모았습니다.',
+    example: '즐겨듣는 노래 모음',
     description: '플레이리스트 설명',
     required: false,
   })
@@ -29,12 +28,4 @@ export class CreatePlaylistDto {
   @IsString({ each: true })
   @IsOptional()
   tags?: string[];
-
-  @ApiProperty({
-    description: '플레이리스트에 추가할 첫 번째 곡 정보',
-    type: AddVideoDto,
-  })
-  @ValidateNested()
-  @Type(() => AddVideoDto)
-  firstVideo: AddVideoDto;
 }
