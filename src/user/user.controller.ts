@@ -100,7 +100,19 @@ export class UserController {
     summary: '프로필 이미지 업로드',
     description: '사용자의 프로필 이미지를 파일 형식으로 업로드하고 업데이트합니다.',
   })
-  @ApiConsumes('multipart/form-data') 
+   @ApiConsumes('multipart/form-data')
+   @ApiBody({
+    description: '업로드할 프로필 이미지 파일',
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary', // 파일 업로드를 명시
+        },
+      },
+    },
+  })
   @ApiResponse({
     status: 200,
     description: '프로필 이미지가 성공적으로 업데이트됨',
