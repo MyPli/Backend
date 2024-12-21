@@ -109,12 +109,24 @@ export class UpdatePlaylistDto {
   tags?: string[];
 
   @ApiProperty({
-    description: '플레이리스트 수정 시 동영상 추가/삭제 정보',
-    type: VideosDto,
+    description: '플레이리스트 동영상 배열',
+    type: [VideoDto],
+    example: [
+      {
+        youtubeId: 'abc123',
+        title: 'New Song Title',
+        thumbnailUrl: 'https://img.youtube.com/vi/abc123/0.jpg',
+        channelName: 'Channel Name',
+        duration: 180,
+        order: 1,
+      },
+    ],
     required: false,
   })
-  @ValidateNested()
-  @Type(() => VideosDto)
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => VideoDto)
   @IsOptional()
-  videos?: VideosDto;
+  videos?: VideoDto[];
 }
+
