@@ -62,7 +62,7 @@ export class PlaylistService {
   
   // 2. 플레이리스트 수정
   async updatePlaylist(id: number, userId: number, dto: UpdatePlaylistDto): Promise<any> {
-    const { title, description, tags = [], videos } = dto;
+    const { title, description, tags = [], videos = [] } = dto;
 
     const playlist = await this.prisma.playlist.findUnique({
         where: { id },
@@ -101,73 +101,25 @@ export class PlaylistService {
         }),
     );
 
-    // 비디오 처리
-    if (videos) {
-        const { toRemove = [], toAdd = [] } = videos;
+    // 비디오 처리: 이전 데이터 삭제 및 새로운 데이터 삽입
+    await this.prisma.video.deleteMany({ where: { playlistId: id } });
 
-        // Case 1: 삭제 처리
-        if (toRemove.length > 0) {
-            const parsedToRemove = toRemove.map((id) =>
-                typeof id === 'string' ? parseInt(id, 10) : id
-            ); // 문자열이면 숫자로 변환, 숫자면 그대로 사용
-            await Promise.all(
-                parsedToRemove.map(async (videoId) => {
-                    const video = await this.prisma.video.findUnique({
-                        where: { id: videoId },
-                    });
-                    if (!video || video.playlistId !== id) {
-                        throw new NotFoundException(`비디오 ID ${videoId}를 찾을 수 없습니다.`);
-                    }
-                    await this.prisma.video.delete({ where: { id: videoId } });
-                }),
-            );
-        }
-
-        // Case 2: 추가 처리
-        if (toAdd.length > 0) {
-            const currentVideos = await this.prisma.video.findMany({
-                where: { playlistId: id },
-                orderBy: { order: 'asc' },
+    await Promise.all(
+        videos.map(async (video, index) => {
+            const duration = video.duration || (await this.videoService.fetchVideoDuration(video.youtubeId));
+            await this.prisma.video.create({
+                data: {
+                    playlistId: id,
+                    youtubeId: video.youtubeId,
+                    title: video.title,
+                    channelName: video.channelName,
+                    thumbnailUrl: video.thumbnailUrl,
+                    duration: duration,
+                    order: index + 1,
+                },
             });
-
-            const currentMaxOrder = currentVideos.length;
-
-            await Promise.all(
-                toAdd.map(async (videoDto, index) => {
-                    const order = videoDto.order ?? currentMaxOrder + index + 1;
-                    const duration =
-                        videoDto.duration || (await this.videoService.fetchVideoDuration(videoDto.youtubeId));
-
-                    await this.prisma.video.create({
-                        data: {
-                            playlistId: id,
-                            youtubeId: videoDto.youtubeId,
-                            title: videoDto.title,
-                            channelName: videoDto.channelName,
-                            thumbnailUrl: videoDto.thumbnailUrl,
-                            duration: duration,
-                            order: order,
-                        },
-                    });
-                }),
-            );
-        }
-
-        // Case 3: 순서 재정렬
-        const allVideos = await this.prisma.video.findMany({
-            where: { playlistId: id },
-            orderBy: [{ id: 'asc' }], // ID 기준 정렬
-        });
-
-        await Promise.all(
-            allVideos.map((video, index) =>
-                this.prisma.video.update({
-                    where: { id: video.id },
-                    data: { order: index + 1 },
-                }),
-            ),
-        );
-    }
+        }),
+    );
 
     const updatedPlaylist = await this.prisma.playlist.findUnique({
         where: { id },
