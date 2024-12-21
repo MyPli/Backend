@@ -184,11 +184,11 @@ export class PlaylistService {
   
 
   // 5. 플레이리스트 상세 조회
-  async getPlaylistDetails(id: number): Promise<any> {
+  async getPlaylistDetails(id: number, userId: number): Promise<any> {
     const playlist = await this.prisma.playlist.findUnique({
       where: { id },
       include: {
-        user: { select: { nickname: true } }, // 닉네임 가져오기
+        user: { select: { nickname: true, id: true } }, // 닉네임과 사용자 ID 가져오기
         tags: { include: { tag: { select: { name: true } } } }, // 태그 이름 가져오기
         videos: {
           select: {
@@ -198,6 +198,11 @@ export class PlaylistService {
             thumbnailUrl: true,
             duration: true, // 비디오 길이
             channelName: true, // 아티스트로 사용할 채널 이름
+          },
+        },
+        likes: {
+          select: {
+            userId: true, // 좋아요를 누른 사용자 ID 가져오기
           },
         },
       },
@@ -230,6 +235,8 @@ export class PlaylistService {
       coverImage: playlist.coverImage || null,
       tags: playlist.tags.map((tag) => tag.tag.name),
       createdBy: playlist.user?.nickname || 'Unknown', // 닉네임 사용
+      createdByMe: playlist.user?.id === userId, // 내가 만든 플레이리스트인지 여부
+      liked: playlist.likes.some((like) => like.userId === userId), // 좋아요 여부
       totalTime: this.formatDuration(totalTime), // 포맷된 총 시간 반환
       videos,
     };

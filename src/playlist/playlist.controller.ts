@@ -147,6 +147,8 @@ export class PlaylistController {
         coverImage: 'https://img.youtube.com/vi/example/0.jpg',
         tags: ['공부', '집중'],
         createdBy: "Jhon Doe",
+        createdByMe: true, // 내가 만든 플레이리스트 여부
+        liked: true, // 좋아요 여부
         totalTime: '01:25:30',
         videos: [
           {
@@ -170,9 +172,10 @@ export class PlaylistController {
     status: 401,
     description: '인증 오류',
     schema: { example: { message: '인증이 필요합니다.' } },
-  })  
-  async getPlaylistDetails(@Param('id') id: string): Promise<any> {
-    const playlist = await this.playlistService.getPlaylistDetails(parseInt(id, 10));
+  })
+  async getPlaylistDetails(@Param('id') id: string, @Req() req: Request): Promise<any> {
+    const userId = req.user.userId; // 인증된 사용자의 ID 가져오기
+    const playlist = await this.playlistService.getPlaylistDetails(parseInt(id, 10), userId);
     return playlist;
   }
     
