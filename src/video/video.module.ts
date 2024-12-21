@@ -8,5 +8,6 @@ import { AuthModule } from '../auth/auth.module';
   imports: [PrismaModule, AuthModule],
   controllers: [VideoController],
   providers: [VideoService],
+  exports: [VideoService], // VideoService를 외부로 노출
 })
 export class VideoModule {}
