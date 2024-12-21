@@ -21,7 +21,7 @@ import { AddVideoDto } from './dto/add-video.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Request } from 'express';
 import { Public } from 'src/auth/auth.decorator';
-import { ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth, ApiBody  } from '@nestjs/swagger';
 
 @ApiBearerAuth()
 @Controller('/playlists')
@@ -226,6 +226,68 @@ export class PlaylistController {
                 곡 추가(toAdd): 추가할 동영상 정보를 제공 (youtubeId, title, thumbnailUrl 등).<br>
                 곡 삭제(toRemove): 삭제할 동영상의 ID 목록을 제공.<br>
                 만약 동영상 추가와 삭제 정보가 모두 비어 있다면 태그와 제목, 설명만 수정됩니다.` })
+  @ApiBody({
+  description: '플레이리스트 수정 요청 데이터',
+  schema: {
+    type: 'object',
+    properties: {
+      title: {
+        type: 'string',
+        example: 'Updated Playlist Title',
+        description: '플레이리스트 제목',
+      },
+      description: {
+        type: 'string',
+        example: 'Updated description',
+        description: '플레이리스트 설명',
+      },
+      tags: {
+        type: 'array',
+        items: { type: 'string' },
+        example: ['Pop', 'K-Pop'],
+        description: '플레이리스트 태그 목록',
+      },
+      videos: {
+        type: 'object',
+        properties: {
+          toRemove: {
+            type: 'array',
+            items: { type: 'number' },
+            description: '삭제할 비디오 ID 목록',
+            example: [90, 91],
+          },
+          toAdd: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                youtubeId: { type: 'string', example: 'abc123' },
+                title: { type: 'string', example: 'New Song Title' },
+                thumbnailUrl: { type: 'string', example: 'https://img.youtube.com/vi/abc123/0.jpg' },
+                channelName: { type: 'string', example: 'Channel Name' },
+                duration: { type: 'number', example: 180 },
+                order: { type: 'number', example: 2 },
+              },
+            },
+            description: '추가할 비디오 정보 목록',
+            example: [
+              {
+                youtubeId: 'abc123',
+                title: 'New Song Title',
+                thumbnailUrl: 'https://img.youtube.com/vi/abc123/0.jpg',
+                channelName: 'Channel Name',
+                duration: 180,
+                order: 2,
+              },
+            ],
+          },
+        },
+        description: '동영상 삭제/추가 정보',
+      },
+    },
+    required: [],
+  },
+})
   @ApiResponse({
     status: 200,
     description: '플레이리스트 수정 성공',
