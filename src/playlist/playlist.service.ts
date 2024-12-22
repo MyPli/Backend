@@ -21,43 +21,73 @@ export class PlaylistService {
   }
 
   // 1. 플레이리스트 생성
-  async createPlaylist(dto: CreatePlaylistDto, userId: number): Promise<any> {
-    const { title, description, tags = [] } = dto;
+  async createPlaylist(data: CreatePlaylistDto, userId: number) {
+    const { title, description, tags, videos } = data;
   
-    // 태그 유효성 검사
-    const validatedTags = tags.filter((tag) => tag && tag.trim() !== "");
-  
-    const playlist = await this.prisma.playlist.create({
-      data: {
-        title,
-        description,
-        user: { connect: { id: userId } },
-        tags: {
-          create: validatedTags.map((tag) => ({
-            tag: {
-              connectOrCreate: {
-                where: { name: tag },
-                create: { name: tag },
+    // 트랜잭션 사용
+    return this.prisma.$transaction(async (prisma) => {
+      // 1. 플레이리스트 생성
+      const playlist = await prisma.playlist.create({
+        data: {
+          title,
+          description,
+          userId,
+          tags: {
+            create: tags.map((tag) => ({
+              tag: {
+                connectOrCreate: {
+                  where: { name: tag },
+                  create: { name: tag },
+                },
               },
-            },
-          })),
+            })),
+          },
         },
-      },
-      include: {
-        tags: {
-          include: { tag: true },
+        include: {
+          tags: { include: { tag: true } }, // 연결된 tags 데이터 반환
         },
-      },
-    });
+      });
   
-    return {
-      id: playlist.id,
-      title: playlist.title,
-      description: playlist.description,
-      tags: playlist.tags.map((playlistTag) => playlistTag.tag.name),
-      message: "플레이리스트 생성 성공",
-    };
+      // 2. 곡 추가 (videos 배열이 있을 경우 처리)
+      let createdVideos = [];
+      if (videos && videos.length > 0) {
+        const videoData = videos.map((video, index) => ({
+          playlistId: playlist.id,
+          youtubeId: video.youtubeId,
+          title: video.title,
+          thumbnailUrl: video.thumbnailUrl,
+          channelName: video.channelName,
+          duration: video.duration,
+          order: video.order ?? index + 1,
+        }));
+  
+        // videos를 저장하고 저장된 결과를 반환
+        await prisma.video.createMany({ data: videoData });
+  
+        // 저장된 videos를 조회
+        createdVideos = await prisma.video.findMany({
+          where: { playlistId: playlist.id },
+          select: {
+            id: true,
+            youtubeId: true,
+            title: true,
+            thumbnailUrl: true,
+            channelName: true,
+            duration: true,
+            order: true,
+          },
+        });
+      }
+  
+      // playlist와 함께 videos, tags 데이터를 반환
+      return {
+        ...playlist,
+        videos: createdVideos,
+        tags: playlist.tags.map((tag) => tag.tag.name), // tags 데이터를 변환
+      };
+    });
   }
+
   
   
   // 2. 플레이리스트 수정
