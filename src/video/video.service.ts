@@ -4,6 +4,7 @@ import { AddVideoDto } from '../playlist/dto/add-video.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { SearchVideoDto } from './dto/search-video.dto';
 import { google } from 'googleapis';
+import { cache } from '../utils/cache.util';
 
 @Injectable()
 export class VideoService {
@@ -28,64 +29,74 @@ export class VideoService {
     return hours * 3600 + minutes * 60 + seconds; // 초 단위로 변환
   }
 
-  // 1. 유튜브 동영상 검색 - 음악 카테고리 및 duration 포함
+  // 1. 유튜브 동영상 검색 - 음악 카테고리 및 duration 포함 + 로컬 캐시 추가
   async searchVideos(query: SearchVideoDto) {
     if (!query.keyword) {
       throw new Error('검색 키워드가 필요합니다.');
     }
-
-    // Step 1: search.list로 videoId 가져오기
+  
+    const cacheKey = `video_search:${query.keyword}:${query.maxResults || 5}`;
+    const cachedResults = cache.get(cacheKey);
+  
+    if (cachedResults) {
+      return cachedResults.map((result) => ({
+        ...result,
+        source: 'cache', // 로컬 캐시에서 가져온 경우
+      }));
+    }
+  
     const searchResponse = await this.youtube.search.list({
       part: ['id'],
       q: query.keyword,
       maxResults: query.maxResults || 5,
-      type: 'video', // 비디오만 검색
-      videoCategoryId: '10', // 음악 카테고리 한정
+      type: 'video',
+      videoCategoryId: '10',
       videoEmbeddable: 'true',
     });
-
+  
     const videoIds = searchResponse.data.items.map((item) => item.id.videoId);
-
+  
     if (videoIds.length === 0) {
-      return []; // 검색 결과가 없으면 빈 배열 반환
+      return [];
     }
-
-    // Step 2: videos.list로 videoId에 대한 세부 정보 가져오기
+  
     const videoResponse = await this.youtube.videos.list({
       part: ['snippet', 'contentDetails'],
       id: videoIds.join(','),
     });
-
-    // Step 3: 결과 필터링 (제목에만 키워드 포함) 및 duration 값 변환
-    return videoResponse.data.items
-      .filter((item) =>
-        item.snippet.title.toLowerCase().includes(query.keyword.toLowerCase())
-      ) // 제목에만 키워드 포함된 경우만 필터링
-      .map((item) => ({
-        youtubeId: item.id,
-        title: item.snippet.title,
-        channelName: item.snippet.channelTitle,
-        thumbnailUrl: item.snippet.thumbnails?.default?.url,
-        duration: this.parseDuration(item.contentDetails.duration),
-      }));
+  
+    const results = videoResponse.data.items.map((item) => ({
+      youtubeId: item.id,
+      title: item.snippet.title,
+      channelName: item.snippet.channelTitle,
+      thumbnailUrl: item.snippet.thumbnails?.default?.url,
+      duration: this.parseDuration(item.contentDetails.duration),
+      source: 'youtube', // 유튜브에서 가져온 경우
+    }));
+  
+    cache.set(cacheKey, results, 3600); // TTL: 1시간
+    return results;
   }
 
   // 2. 서비스와 유튜브 검색 결과 통합 - source 필드 추가
   async searchServiceAndYoutube(query: SearchVideoDto) {
-    // 유튜브 검색 결과
+    const cacheKey = `combined_search:${query.keyword}:${query.maxResults || 5}`;
+    const cachedResults = cache.get(cacheKey);
+  
+    if (cachedResults) {
+      return {
+        ...cachedResults,
+        youtubePlaylists: cachedResults.youtubePlaylists.map((video) => ({
+          ...video,
+          source: 'cache', // 로컬 캐시에서 가져온 경우
+        })),
+      };
+    }
+  
     const youtubeResults = await this.searchVideos(query);
-
-    // 유튜브 검색 결과에 "source": "youtube" 추가
-    const youtubePlaylists = youtubeResults.map((video) => ({
-      ...video,
-      source: 'youtube',
-    }));
-
-    // 서비스 플레이리스트 검색 결과
+  
     const serviceResults = await this.prisma.playlist.findMany({
-      where: {
-        title: { contains: query.keyword }, // Prisma로 검색
-      },
+      where: { title: { contains: query.keyword } },
       select: {
         id: true,
         title: true,
@@ -93,17 +104,19 @@ export class VideoService {
         coverImage: true,
       },
     });
-
-    // 서비스 검색 결과에 "source": "service" 추가
+  
     const servicePlaylists = serviceResults.map((playlist) => ({
       ...playlist,
       source: 'service',
     }));
-
-    return {
-      servicePlaylists: servicePlaylists,
-      youtubePlaylists: youtubePlaylists,
+  
+    const combinedResults = {
+      servicePlaylists,
+      youtubePlaylists: youtubeResults,
     };
+  
+    cache.set(cacheKey, combinedResults, 3600); // TTL: 1시간
+    return combinedResults;
   }
 
   // 3. 유튜브 동영상의 duration 값 가져오기
