@@ -8,9 +8,19 @@ import { VideoModule } from './video/video.module';
 import { SearchModule } from './search/search.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { Module } from '@nestjs/common';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
-  imports: [LikeModule, PlaylistModule, VideoModule, SearchModule, PrismaModule, AuthModule, UserModule],
+  imports: [
+    LikeModule,
+    PlaylistModule,
+    VideoModule,
+    SearchModule,
+    PrismaModule,
+    AuthModule,
+    UserModule,
+    RedisModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

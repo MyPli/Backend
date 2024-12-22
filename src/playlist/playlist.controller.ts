@@ -10,6 +10,7 @@ import {
   Req,
   UseGuards,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PlaylistService } from './playlist.service';
 import { CreatePlaylistDto } from './dto/create-playlist.dto';
@@ -21,7 +22,10 @@ import { AddVideoDto } from './dto/add-video.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Request } from 'express';
 import { Public } from 'src/auth/auth.decorator';
+import { RedisService } from '../redis/redis.service';
 import { ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth, ApiBody  } from '@nestjs/swagger';
+import { NotFoundException } from '@nestjs/common';
+
 
 @ApiBearerAuth()
 @Controller('/playlists')
@@ -29,6 +33,7 @@ export class PlaylistController {
   constructor(
     private readonly playlistService: PlaylistService,
     private readonly videoService: VideoService,
+    private readonly redisService: RedisService,
   ) {}
 
   @Get('popular')
@@ -184,17 +189,34 @@ export class PlaylistController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: '플레이리스트 생성',
-    description: `새로운 플레이리스트를 생성합니다.`,
+    description: `새로운 플레이리스트를 생성합니다. 플레이리스트 생성 시 동영상을 함께 추가할 수 있습니다.`,
+  })
+  @ApiBody({
+    description: '새로운 플레이리스트 생성 요청 데이터',
+    schema: {
+      example: {
+        title: 'My Favorite Songs',
+        description: '즐겨듣는 노래 모음',
+        tags: ['Pop', 'K-Pop'],
+        videos: [
+          {
+            youtubeId: 'abc123',
+            title: '노래 제목',
+            thumbnailUrl: 'https://img.youtube.com/vi/abc123/0.jpg',
+            channelName: '채널 이름',
+            duration: 180,
+            order: 1,
+          },
+        ],
+      },
+    },
   })
   @ApiResponse({
     status: 201,
     description: '플레이리스트 생성 성공',
     schema: {
       example: {
-        id: 1,
-        title: 'My Favorite Songs',
-        description: '즐겨듣는 노래 모음',
-        tags: ['Pop', 'K-Pop'],
+        playlistId: 1,
         message: '플레이리스트 생성 성공',
       },
     },
@@ -202,7 +224,7 @@ export class PlaylistController {
   @ApiResponse({
     status: 400,
     description: '필수 데이터 누락',
-    schema: { example: { message: '제목과 태그, 첫번째 비디오 값은 필수입니다.' } },
+    schema: { example: { message: '제목, 태그 또는 비디오 데이터가 누락되었습니다.' } },
   })
   @ApiResponse({
     status: 401,
@@ -211,8 +233,15 @@ export class PlaylistController {
   })
   async createPlaylist(@Body() dto: CreatePlaylistDto, @Req() req): Promise<any> {
     const userId = req.user?.userId;
+  
+    // 서비스 로직 호출
     const playlist = await this.playlistService.createPlaylist(dto, userId);
-    return playlist;
+  
+    // 반환 데이터 간소화
+    return {
+      playlistId: playlist.id,
+      message: '플레이리스트 생성 성공',
+    };
   }
   
   
@@ -396,7 +425,7 @@ export class PlaylistController {
 
 
   @Get('videos/search')
-  @ApiOperation({ summary: '유튜브 동영상 검색', description: '유튜브 API를 통해 동영상을 검색합니다.' })
+  @ApiOperation({ summary: '유튜브 동영상 검색', description: '유튜브 API를 통해 동영상을 검색하며, Redis 캐싱을 활용합니다.' })
   @ApiQuery({ name: 'keyword', required: true, description: '검색 키워드' })
   @ApiQuery({ name: 'maxResults', required: false, description: '검색 결과 수 (기본값: 5)' })
   @ApiResponse({
@@ -410,6 +439,7 @@ export class PlaylistController {
           channelName: '채널 이름',
           thumbnailUrl: 'https://example.com/thumbnail.jpg',
           duration: 180,
+          source: 'cache', // 캐시에서 가져온 경우
         },
       ],
     },
@@ -423,15 +453,46 @@ export class PlaylistController {
     status: 404,
     description: '검색 결과 없음',
     schema: { example: { message: '검색 결과를 찾을 수 없습니다.' } },
-  })    
+  })
   async searchVideos(@Query() query: SearchVideoDto) {
+    const { keyword, maxResults } = query;
+  
+    if (!keyword) {
+      throw new BadRequestException('검색어는 필수입니다.');
+    }
+  
+    // Redis 키 생성
+    const cacheKey = `videos:search:${keyword}:${maxResults || 5}`;
+  
+    // Redis에서 캐싱된 결과 조회
+    const cachedVideos = await this.redisService.get(cacheKey);
+    if (cachedVideos) {
+      const cachedResult = JSON.parse(cachedVideos);
+      return cachedResult.map((video) => ({
+        ...video,
+        source: 'cache', // Redis 캐시에서 가져온 경우
+      }));
+    }
+  
+    // Redis에 결과가 없으면 YouTube API를 호출
     const videos = await this.videoService.searchVideos(query);
+  
+    // 결과가 없으면 404 응답
+    if (!videos || videos.length === 0) {
+      throw new NotFoundException('검색 결과를 찾을 수 없습니다.');
+    }
+  
+    // Redis에 검색 결과 캐싱 (TTL: 60분)
+    await this.redisService.set(cacheKey, JSON.stringify(videos), 3600);
+  
+    // 검색 결과 반환
     return videos.map((video) => ({
       youtubeId: video.youtubeId,
       title: video.title,
       channelName: video.channelName,
       thumbnailUrl: video.thumbnailUrl,
       duration: video.duration,
+      source: 'youtube', // YouTube API에서 가져온 경우
     }));
   }
   

@@ -4,12 +4,16 @@ import { AddVideoDto } from '../playlist/dto/add-video.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { SearchVideoDto } from './dto/search-video.dto';
 import { google } from 'googleapis';
+import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class VideoService {
   private readonly youtube;
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redisService: RedisService, // RedisService 주입
+  ) {
     this.youtube = google.youtube({
       version: 'v3',
       auth: process.env.YOUTUBE_API_KEY, // .env에서 YouTube API 키 가져오기
@@ -28,10 +32,18 @@ export class VideoService {
     return hours * 3600 + minutes * 60 + seconds; // 초 단위로 변환
   }
 
-  // 1. 유튜브 동영상 검색 - 음악 카테고리 및 duration 포함
+  // 1. 유튜브 동영상 검색 - 음악 카테고리 및 duration 포함 + Redis 캐시 추가
   async searchVideos(query: SearchVideoDto) {
     if (!query.keyword) {
       throw new Error('검색 키워드가 필요합니다.');
+    }
+
+    // Redis 키 생성
+    const redisKey = `search:${query.keyword}:${query.maxResults || 5}`;
+    const cachedResults = await this.redisService.get(redisKey);
+
+    if (cachedResults) {
+      return JSON.parse(cachedResults); // 캐시된 결과 반환
     }
 
     // Step 1: search.list로 videoId 가져오기
@@ -57,7 +69,7 @@ export class VideoService {
     });
 
     // Step 3: 결과 필터링 (제목에만 키워드 포함) 및 duration 값 변환
-    return videoResponse.data.items
+    const results = videoResponse.data.items
       .filter((item) =>
         item.snippet.title.toLowerCase().includes(query.keyword.toLowerCase())
       ) // 제목에만 키워드 포함된 경우만 필터링
@@ -68,10 +80,22 @@ export class VideoService {
         thumbnailUrl: item.snippet.thumbnails?.default?.url,
         duration: this.parseDuration(item.contentDetails.duration),
       }));
+
+    // 결과 Redis에 캐싱 (TTL: 1시간)
+    await this.redisService.set(redisKey, JSON.stringify(results), 3600);
+
+    return results;
   }
 
-  // 2. 서비스와 유튜브 검색 결과 통합 - source 필드 추가
+  // 2. 서비스와 유튜브 검색 결과 통합 - source 필드 추가 +  Redis 캐싱 포함
   async searchServiceAndYoutube(query: SearchVideoDto) {
+    const redisKey = `combined_search:${query.keyword}:${query.maxResults || 5}`;
+    const cachedResults = await this.redisService.get(redisKey);
+
+    if (cachedResults) {
+      return JSON.parse(cachedResults); // 캐시된 결과 반환
+    }
+
     // 유튜브 검색 결과
     const youtubeResults = await this.searchVideos(query);
 
@@ -100,10 +124,15 @@ export class VideoService {
       source: 'service',
     }));
 
-    return {
+    const combinedResults = {
       servicePlaylists: servicePlaylists,
       youtubePlaylists: youtubePlaylists,
     };
+
+    // 결과 Redis에 캐싱 (TTL: 1시간)
+    await this.redisService.set(redisKey, JSON.stringify(combinedResults), 3600);
+
+    return combinedResults;
   }
 
   // 3. 유튜브 동영상의 duration 값 가져오기
