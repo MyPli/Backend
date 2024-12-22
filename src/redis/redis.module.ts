@@ -8,10 +8,10 @@ import { RedisService } from './redis.service';
     NestRedisModule.forRoot({
       type: 'single',
       options: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT, 10) || 6379,
-        password: process.env.REDIS_PASSWORD || undefined, // 필요 시 비밀번호 추가
-        db: parseInt(process.env.REDIS_DB, 10) || 0, // 데이터베이스 선택 (기본값: 0)
+        host: process.env.REDIS_HOST, // AWS ElastiCache 엔드포인트
+        port: parseInt(process.env.REDIS_PORT, 10),
+        password: process.env.REDIS_PASSWORD || undefined, // Auth Token 설정
+        db: parseInt(process.env.REDIS_DB, 10) || 0,
       },
     }),
   ],
