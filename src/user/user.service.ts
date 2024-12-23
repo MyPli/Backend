@@ -92,6 +92,7 @@ export class UserService {
     return likes.map((like) => ({
       id: like.playlist.id,
       title: like.playlist.title,
+      coverImage: like.playlist.coverImage,
       description: like.playlist.description,
       tags: like.playlist.tags.map((playlistTag) => playlistTag.tag.name), // Tag의 name 속성을 매핑
     }));

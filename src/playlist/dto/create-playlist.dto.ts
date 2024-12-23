@@ -37,4 +37,8 @@ export class CreatePlaylistDto {
   @Type(() => AddVideoDto)
   @IsOptional()
   videos?: AddVideoDto[]; // 추가된 필드
+
+  @IsOptional()
+  @IsString()
+  coverImage?: string; // 추가된 필드
 }

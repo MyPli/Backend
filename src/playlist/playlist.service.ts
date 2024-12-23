@@ -22,7 +22,7 @@ export class PlaylistService {
 
   // 1. 플레이리스트 생성
   async createPlaylist(data: CreatePlaylistDto, userId: number) {
-    const { title, description, tags, videos } = data;
+    const { title, description, tags, videos, coverImage } = data;
   
     // 트랜잭션 사용
     return this.prisma.$transaction(async (prisma) => {
@@ -32,6 +32,7 @@ export class PlaylistService {
           title,
           description,
           userId,
+          coverImage,
           tags: {
             create: tags.map((tag) => ({
               tag: {
