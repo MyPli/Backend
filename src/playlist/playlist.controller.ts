@@ -420,44 +420,50 @@ export class PlaylistController {
 
 
   @Get('videos/search')
-  @ApiOperation({ summary: '유튜브 동영상 검색', description: '유튜브 API를 통해 동영상을 검색합니다.' })
-  @ApiQuery({ name: 'keyword', required: true, description: '검색 키워드' })
-  @ApiQuery({ name: 'maxResults', required: false, description: '검색 결과 수 (기본값: 5)' })
-  @ApiResponse({
-    status: 200,
-    description: '유튜브 동영상 검색 성공',
-    schema: {
-      example: [
-        {
-          youtubeId: 'abc123',
-          title: '동영상 제목',
-          channelName: '채널 이름',
-          thumbnailUrl: 'https://example.com/thumbnail.jpg',
-          duration: 180,
-        },
-      ],
-    },
-  })
-  @ApiResponse({
-    status: 400,
-    description: '검색어 누락',
-    schema: { example: { message: '검색어는 필수입니다.' } },
-  })
-  @ApiResponse({
-    status: 404,
-    description: '검색 결과 없음',
-    schema: { example: { message: '검색 결과를 찾을 수 없습니다.' } },
-  })    
-  async searchVideos(@Query() query: SearchVideoDto) {
-    const videos = await this.videoService.searchVideos(query);
-    return videos.map((video) => ({
-      youtubeId: video.youtubeId,
-      title: video.title,
-      channelName: video.channelName,
-      thumbnailUrl: video.thumbnailUrl,
-      duration: video.duration,
-    }));
-  }
+@ApiOperation({
+  summary: '유튜브 동영상 검색',
+  description: '유튜브 API를 통해 동영상을 검색하며, 로컬 캐싱을 활용합니다.',
+})
+@ApiQuery({ name: 'keyword', required: true, description: '검색 키워드' })
+@ApiQuery({ name: 'maxResults', required: false, description: '검색 결과 수 (기본값: 5)' })
+@ApiResponse({
+  status: 200,
+  description: '유튜브 동영상 검색 성공',
+  schema: {
+    example: [
+      {
+        youtubeId: 'abc123',
+        title: '동영상 제목',
+        channelName: '채널 이름',
+        thumbnailUrl: 'https://example.com/thumbnail.jpg',
+        duration: 180,
+        source: 'cache', // 로컬 캐시에서 가져온 경우
+      },
+    ],
+  },
+})
+@ApiResponse({
+  status: 400,
+  description: '검색어 누락',
+  schema: { example: { message: '검색어는 필수입니다.' } },
+})
+@ApiResponse({
+  status: 404,
+  description: '검색 결과 없음',
+  schema: { example: { message: '검색 결과를 찾을 수 없습니다.' } },
+})
+async searchVideos(@Query() query: SearchVideoDto) {
+  const videos = await this.videoService.searchVideos(query);
+
+  return videos.map((video) => ({
+    youtubeId: video.youtubeId,
+    title: video.title,
+    channelName: video.channelName,
+    thumbnailUrl: video.thumbnailUrl,
+    duration: video.duration,
+    source: video.source || 'youtube', // 유튜브 또는 캐시에서 가져온 경우
+  }));
+}
   
   @Post(':id/videos')
   @UseGuards(JwtAuthGuard)
