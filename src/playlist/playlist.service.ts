@@ -32,7 +32,7 @@ export class PlaylistService {
           title,
           description,
           userId,
-          coverImage,
+          coverImage: videos?.[0]?.thumbnailUrl || null, // 첫 번째 곡의 썸네일 설정
           tags: {
             create: tags.map((tag) => ({
               tag: {
@@ -284,7 +284,13 @@ export class PlaylistService {
         order: order ?? 0,
       },
     });
-  
+    
+     if (!playlist.coverImage) {
+        await this.prisma.playlist.update({
+            where: { id: playlistId },
+            data: { coverImage: dto.thumbnailUrl },
+        });
+    }
     return video;
   }
   
