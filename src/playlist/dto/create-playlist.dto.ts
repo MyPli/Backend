@@ -10,8 +10,8 @@ export class CreatePlaylistDto {
     description: '플레이리스트 제목',
   })
   @IsString()
-  @IsNotEmpty()
-  title: string;
+  @IsOptional()
+  title?: string;
 
   @ApiProperty({
     example: '즐겨듣는 노래 모음',
