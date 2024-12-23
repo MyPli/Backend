@@ -32,7 +32,7 @@ export class PlaylistService {
           title,
           description,
           userId,
-          coverImage: videos?.[0]?.thumbnailUrl || null, // 첫 번째 곡의 썸네일 설정
+          coverImage: videos?.[0]?.thumbnailUrl?.replace('default.jpg', 'hq720.jpg') || null,
           tags: {
             create: tags.map((tag) => ({
               tag: {
@@ -285,10 +285,11 @@ export class PlaylistService {
       },
     });
     
-     if (!playlist.coverImage) {
+    if (!playlist.coverImage) {
+       const highQualityThumbnail = dto.thumbnailUrl.replace('default.jpg', 'hq720.jpg');
         await this.prisma.playlist.update({
             where: { id: playlistId },
-            data: { coverImage: dto.thumbnailUrl },
+            data: { coverImage: highQualityThumbnail },
         });
     }
     return video;
